@@ -1,14 +1,16 @@
-# Module loading
+#---------------------------------------------------------------------------
+# Misc
 
 zmodload zsh/parameter
+export EDITOR=mcedit
+setopt prompt_subst
 
-# Save the history foever
+#---------------------------------------------------------------------------
+# History
 
 setopt HISTIGNOREDUPS HISTIGNORESPACE EXTENDED_HISTORY
 setopt INC_APPEND_HISTORY
-setopt prompt_subst
 
-export EDITOR=mcedit
 HISTSIZE=100000
 SAVEHIST=100000
 HISTFILE=~/.zsh/history
@@ -17,23 +19,26 @@ if [ "$PREV_HISTFILE" != '' ] ; then
     HISTFILE=~/.zsh/history
 fi
 
-################################################################
+#---------------------------------------------------------------------------
 # Aliases
-################################################################
-#
-# aliases
 
-alias mv='mv -v'
-grep-hist() { grep -a "$@" ~/.zsh/history | cut -c16- | uniq | grep --binary-files=text  -v grep-hist }
-reload() { source ~/.zshrc }
-zedit() { mcedit ~/.zshrc ; reload }
-cdr() { cd `realpath $1` }
-tellme() { dbeep result $? }
-grepword() { egrep -n --color "\b$1\b"  -R * }
-hicode() { LESSOPEN="| ~/.zsh/src-hilite-lesspipe.sh %s" less -R "$@" }
-unziprpm() { rpm2cpio $1 | (mkdir -p $2 ; cd $2 && cpio -idmv) }
+alias           mv='mv -v'
+alias           gif='git fetch'
+alias           giri='git rebI'
+alias           gire='git reb'
+alias           gimd='git amendNDA'
 
+grep-hist()	{ grep -a "$@" ~/.zsh/history | cut -c16- | uniq | grep --binary-files=text -v grep-hist }
+reload()	{ source ~/.zshrc }
+zedit()		{ mcedit ~/.zshrc ; reload }
+cdr()		{ cd `realpath $1` }
+grepword()	{ egrep -n --color "\b$1\b"  -R * }
+hicode()	{ LESSOPEN="| ~/.zsh/src-hilite-lesspipe.sh %s" less -R "$@" }
+exrpm()		{ rpm2cpio $1 | (mkdir -p $2 ; cd $2 && cpio -idmv) }
+
+#---------------------------------------------------------------------------
 # Prompt
+
 GIT_PROMPT_EXECUTABLE="haskell"
 ZSH_THEME_GIT_PROMPT_CACHE="y"
 source ~/.zsh/zsh-git-prompt/zshrc.sh
@@ -95,6 +100,9 @@ unset c
 unset Dc
 unset g
 
+#---------------------------------------------------------------------------
+# Key bindings
+
 # create a zkbd compatible hash;
 # to add other keys to this hash, see: man 5 terminfo
 typeset -A key
@@ -149,6 +157,9 @@ bindkey "^[Od" backward-word
 # Free up Ctrl-S, Ctrl-Q
 stty stop undef
 stty start undef
+
+#---------------------------------------------------------------------------
+# Completions
 
 fpath=(~/.zsh/completions $fpath)
 zstyle ':completion:*:*:git:*' script ~/.zsh/git-completion.bash
