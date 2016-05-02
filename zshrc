@@ -23,10 +23,32 @@ fi
 # Aliases
 
 alias           mv='mv -v'
+alias           cdl='cd ~/var/downloads'
+alias           clr='clear'
+alias           gifme='git fetch da-x'
+alias           gih='git show'
+alias           gis='git status'
+alias           gipc='git pushc'
+alias           gic='git co'
+alias           gid='git diff'
 alias           gif='git fetch'
+alias           gibr='git branch -D'
+alias           gib='git branch -v'
+alias           gil='git log'
+alias           gifa='git last'
+alias           gin='git next'
 alias           giri='git rebI'
+alias           gifre='gif && gire'
 alias           gire='git reb'
-alias           gimd='git amendNDA'
+alias           gamd='git amendNDA'
+alias           gre='grep'
+alias           hgre='grep-hist'
+alias           alz='cat ~/.zsh/zshrc | grep ^alias | sort'
+
+# Typos
+alias           gerp='grep'
+alias           rload='reload'
+alias           rloa='reload'
 
 grep-hist()	{ grep -a "$@" ~/.zsh/history | cut -c16- | uniq | grep --binary-files=text -v grep-hist }
 reload()	{ source ~/.zshrc }
@@ -35,6 +57,16 @@ cdr()		{ cd `realpath $1` }
 grepword()	{ egrep -n --color "\b$1\b"  -R * }
 hicode()	{ LESSOPEN="| ~/.zsh/src-hilite-lesspipe.sh %s" less -R "$@" }
 exrpm()		{ rpm2cpio $1 | (mkdir -p $2 ; cd $2 && cpio -idmv) }
+
+function cd() {
+  emulate -LR zsh
+
+  if [[ $1 == 'b.'* ]]; then
+    builtin cd ${${1/"b"}//"."/"../"}
+  else
+    builtin cd $*
+  fi
+}
 
 #---------------------------------------------------------------------------
 # Prompt
