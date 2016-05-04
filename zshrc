@@ -60,6 +60,9 @@ grepword()	{ egrep -n --color "\b$1\b"  -R * }
 hicode()	{ LESSOPEN="| ~/.zsh/src-hilite-lesspipe.sh %s" less -R "$@" }
 exrpm()		{ rpm2cpio $1 | (mkdir -p $2 ; cd $2 && cpio -idmv) }
 
+export LESSOPEN="|fancydiff file %s -e"
+export LESS="-R"
+
 function cd() {
   emulate -LR zsh
 
