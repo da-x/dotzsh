@@ -59,6 +59,7 @@ cdr()		{ cd `realpath $1` }
 grepword()	{ egrep -n --color "\b$1\b"  -R * }
 hicode()	{ LESSOPEN="| ~/.zsh/src-hilite-lesspipe.sh %s" less -R "$@" }
 exrpm()		{ rpm2cpio $1 | (mkdir -p $2 ; cd $2 && cpio -idmv) }
+cgglc()		{ local X=`gglc $1` ; if [[ "$X" != "" ]] ; then cd ${X} ; fi }
 
 export LESSOPEN="|fancydiff file %s -e"
 export LESS="-R"
