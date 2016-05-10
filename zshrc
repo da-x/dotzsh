@@ -42,6 +42,7 @@ alias           gin='git next'
 alias           giri='git rebI'
 alias           gifre='gif && gire'
 alias           gire='git reb'
+alias           gir='tig refs'
 alias           gamd='git amendNDA'
 alias           gre='grep'
 alias           hgre='grep-hist'
@@ -51,6 +52,8 @@ alias           alz='cat ~/.zsh/zshrc | grep ^alias | sort'
 alias           gerp='grep'
 alias           rload='reload'
 alias           rloa='reload'
+alias           dc='cd'
+alias           dmseg='dmesg'
 
 grep-hist()	{ grep -a "$@" ~/.zsh/history | cut -c16- | uniq | grep --binary-files=text -v grep-hist }
 reload()	{ source ~/.zshrc }
