@@ -45,6 +45,7 @@ alias           gire='git reb'
 alias           gir='tig refs'
 alias           gamd='git amendNDA'
 alias           gre='grep'
+alias           godo='git todo'
 alias           hgre='grep-hist'
 alias           alz='cat ~/.zsh/zshrc | grep ^alias | sort'
 
@@ -194,6 +195,9 @@ fi
 # Ctrl-left, Ctrl-right
 bindkey "^[Oc" forward-word
 bindkey "^[Od" backward-word
+bindkey "^[[1;5C" forward-word
+bindkey "^[[1;5D" backward-word
+bindkey "^[[5;30001~" accept-line
 
 # Free up Ctrl-S, Ctrl-Q
 stty stop undef
@@ -207,3 +211,8 @@ zstyle ':completion:*:*:git:*' script ~/.zsh/git-completion.bash
 
 autoload -Uz compinit
 compinit
+
+# https://unix.stackexchange.com/questions/227090/tmux-zsh-messes-up-pasted-text
+unset zle_bracketed_paste
+
+stty -ixon
