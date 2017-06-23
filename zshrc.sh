@@ -69,6 +69,26 @@ bindkey "^[[5;30002~" accept-line
 bindkey "^[[5;30003~" accept-line
 bindkey "^[[5;30005~" accept-line
 
+my-noop-func() {}
+zle -N my-noop-func
+
+bindkey "^[[1;3A" my-noop-func
+bindkey "^[[1;3B" my-noop-func
+bindkey "^[[1;3C" my-noop-func
+bindkey "^[[1;3D" my-noop-func
+bindkey "^[[11;5~" my-noop-func
+bindkey "^[[12;5~" my-noop-func
+bindkey "^[[13;5~" my-noop-func
+bindkey "^[[14;5~" my-noop-func
+bindkey "^[[11;3~" my-noop-func
+bindkey "^[[12;3~" my-noop-func
+bindkey "^[[13;3~" my-noop-func
+bindkey "^[[14;3~" my-noop-func
+bindkey "^[[11;6~" my-noop-func
+bindkey "^[[12;6~" my-noop-func
+bindkey "^[[13;6~" my-noop-func
+bindkey "^[[14;6~" my-noop-func
+
 # Autoload stuff
 
 autoload -U compaudit compinit
