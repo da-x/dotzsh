@@ -5,17 +5,12 @@ ZSH_ROOT=$(dirname $0)
 SAVEHIST=100000
 HISTSIZE=100000
 HISTFILE=${ZSH_ROOT}/history
-setopt inc_append_history
-setopt histignoredups
-setopt histignorespace
-setopt extended_history
-setopt share_history
-setopt hist_verify
 
 # Aliases
 
 alias -s c=vim
 
+alias g='git'
 alias mv='mv -v'
 alias cdl='cd ~/var/downloads'
 alias clr='clear'
@@ -72,6 +67,7 @@ bindkey "^[[5;30005~" accept-line
 my-noop-func() {}
 zle -N my-noop-func
 
+bindkey "^[[5;30014~" my-noop-func
 bindkey "^[[1;3A" my-noop-func
 bindkey "^[[1;3B" my-noop-func
 bindkey "^[[1;3C" my-noop-func
@@ -113,8 +109,34 @@ source ${ZSH_ROOT}/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 unset DISABLE_AUTO_UPDATE
 
+# History, part #2
+
+setopt no_inc_append_history
+setopt histignoredups
+setopt histignorespace
+setopt extended_history
+setopt share_history
+setopt hist_verify
+
+up-line-or-local-history() {
+    zle set-local-history 1
+    zle up-line-or-history
+    zle set-local-history 0
+}
+zle -N up-line-or-local-history
+down-line-or-local-history() {
+    zle set-local-history 1
+    zle down-line-or-history
+    zle set-local-history 0
+}
+zle -N down-line-or-local-history
+
 bindkey '^R' history-incremental-pattern-search-backward
 bindkey '^S' history-incremental-pattern-search-forward
+bindkey "^[[A" up-line-or-local-history
+bindkey "^[[B" down-line-or-local-history
+bindkey "^[[1;5A" up-line-or-history
+bindkey "^[[1;5B" down-line-or-history
 
 # Prompt
 
@@ -204,3 +226,15 @@ precmd () {
 function reload() {
     exec zsh
 }
+
+function cd-to-backlink() {
+    for i in ~/.zsh/backlinks/* ; do
+	if [[ "$(realpath $i)" == "$(pwd)" ]] ; then
+	    cd $(realpath -s $(realpath ~/.zsh/backlinks)/$(readlink $i))
+	    break
+	fi
+    done
+}
+
+cd-to-backlink
+
