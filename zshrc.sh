@@ -85,6 +85,13 @@ bindkey "^[[12;6~" my-noop-func
 bindkey "^[[13;6~" my-noop-func
 bindkey "^[[14;6~" my-noop-func
 
+bindkey "^[[2;5~" my-noop-func
+bindkey "^[[3;5~" my-noop-func
+bindkey "^[[7;5~" my-noop-func
+bindkey "^[[8;5~" my-noop-func
+bindkey "^[[5;5~" my-noop-func
+bindkey "^[[6;5~" my-noop-func
+
 # Autoload stuff
 
 autoload -U compaudit compinit
@@ -144,6 +151,13 @@ bindkey "^[[1;5B" down-line-or-history
 
 autoload -U colors && colors
 
+HOST_NAME_PROMPT_OVERRIDE=$(hostname)
+HOST_PC_PROMPT_COLOR="$fg_bold[magenta]"
+
+if [[ -e ${ZSH_ROOT}/per-host-config.zsh ]] ; then
+    source ${ZSH_ROOT}/per-host-config.zsh
+fi
+
 setopt PROMPT_SUBST
 
 set_prompt() {
@@ -188,11 +202,14 @@ set_prompt() {
     fi
 
     # Sudo: https://superuser.com/questions/195781/sudo-is-there-a-command-to-check-if-i-have-sudo-and-or-how-much-time-is-left
-    CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
-    if [ ${CAN_I_RUN_SUDO} -gt 0 ]
-    then
-	PS1+=' '
-	PS1+="%{$fg_bold[red]%}SUDO%{$reset_color%}"
+
+    if [[ "$NO_SUDO_PROMPT_CHECK" == "y" ]] ;then
+	CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1|grep "load"|wc -l)
+	if [ ${CAN_I_RUN_SUDO} -gt 0 ]
+	then
+	    PS1+=' '
+	    PS1+="%{$fg_bold[red]%}SUDO%{$reset_color%}"
+	fi
     fi
 
     # Path: http://stevelosh.com/blog/2010/02/my-extravagant-zsh-prompt/
@@ -204,7 +221,7 @@ set_prompt() {
     else
 	dirpwd="$dirpwd/"
     fi
-    PS1+=" %{$fg_bold[magenta]%}%M%{$reset_color$fg[white]%}:${dirpwd}%{$fg_bold[white]%}$(basename ${pwd})%{$reset_color%}"
+    PS1+=" %{${HOST_PC_PROMPT_COLOR}%}${HOST_NAME_PROMPT_OVERRIDE}%{$reset_color$fg[white]%}:${dirpwd}%{$fg_bold[white]%}$(basename ${pwd})%{$reset_color%}"
 
     # End
 
@@ -228,12 +245,7 @@ function reload() {
 }
 
 function cd-to-backlink() {
-    for i in ~/.zsh/backlinks/* ; do
-	if [[ "$(realpath $i)" == "$(pwd)" ]] ; then
-	    cd $(realpath -s $(realpath ~/.zsh/backlinks)/$(readlink $i))
-	    break
-	fi
-    done
+    $(python ${ZSH_ROOT}/backlink.py)
 }
 
 cd-to-backlink
