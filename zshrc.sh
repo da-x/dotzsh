@@ -139,7 +139,7 @@ down-line-or-local-history() {
 zle -N down-line-or-local-history
 
 bindkey '^R' history-incremental-pattern-search-backward
-bindkey '^S' history-incremental-pattern-search-forward
+bindkey '^F' history-incremental-pattern-search-forward
 bindkey "^[[A" up-line-or-local-history
 bindkey "^[[B" down-line-or-local-history
 bindkey "^[[1;5A" up-line-or-history
