@@ -145,6 +145,45 @@ bindkey "^[[B" down-line-or-local-history
 bindkey "^[[1;5A" up-line-or-history
 bindkey "^[[1;5B" down-line-or-history
 
+# Command line editing shortcuts for Git
+
+emit-current-git-hash() {
+    local s="$(git rev-parse HEAD)"
+
+    # Append 's' as if it was written manually, advancing the cursor
+    BUFFER="${BUFFER[1,$(($CURSOR))]}$s${BUFFER[$(($CURSOR + 1)),100000]}"
+    CURSOR=$(($CURSOR + $#s))
+}
+zle -N emit-current-git-hash
+
+emit-current-git-branch-name() {
+    BUFFER+="$(git rev-parse --abbrev-ref HEAD)"
+}
+zle -N emit-current-git-branch-name
+
+emit-current-git-path-to-root() {
+    local s="$(git rev-parse --show-cdup)"
+
+    # Append 's' as if it was written manually, advancing the cursor
+    BUFFER="${BUFFER[1,$(($CURSOR))]}$s${BUFFER[$(($CURSOR + 1)),100000]}"
+    CURSOR=$(($CURSOR + $#s))
+}
+zle -N emit-current-git-path-to-root
+
+emit-current-git-root-relative() {
+    local s="$(git rev-parse --show-prefix)"
+
+    # Append 's' as if it was written manually, advancing the cursor
+    BUFFER="${BUFFER[1,$(($CURSOR))]}$s${BUFFER[$(($CURSOR + 1)),100000]}"
+    CURSOR=$(($CURSOR + $#s))
+}
+zle -N emit-current-git-root-relative
+
+bindkey "^[gb" emit-current-git-branch-name
+bindkey "^[gh" emit-current-git-hash
+bindkey "^[gr" emit-current-git-path-to-root
+bindkey "^[gd" emit-current-git-root-relative
+
 # Prompt
 
 # (took stuff from https://github.com/Parth/dotfiles)
