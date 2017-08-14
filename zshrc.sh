@@ -280,8 +280,21 @@ precmd () {
     _start=-1
 }
 
-function reload() {
+reload () {
     exec zsh
+}
+
+dotfiles () {
+    case $1 in
+	sync)
+            cd ~/.files
+            ./sync.sh
+            cd -
+	    ;;
+	*)
+	    echo "Unknown command $1"
+	    ;;
+    esac
 }
 
 function cd-to-backlink() {
