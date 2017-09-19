@@ -200,6 +200,36 @@ fi
 
 setopt PROMPT_SUBST
 
+# From: https://github.com/trapd00r/Documentation/blob/master/zsh/zshrc_mikachu
+
+autoload -U narrow-to-region
+function _narrow_to_region_marked()
+{
+    local right
+    local left
+    local OLDMARK=MARK
+    local wasregion=1
+    if ((REGION_ACTIVE == 0)); then
+	MARK=CURSOR
+	wasregion=0
+    fi
+    REGION_ACTIVE=0
+    if ((MARK < CURSOR)); then
+	left="$LBUFFER[0,$((MARK-CURSOR-1))]"
+	right="$RBUFFER"
+    else
+	left="$LBUFFER"
+	right="$BUFFER[$((MARK+1)),-1]"
+    fi
+    narrow-to-region -p "$left>>|" -P "|<<$right" "$@"
+    MARK=OLDMARK
+    if ((wasregion)); then
+	REGION_ACTIVE=1
+    fi
+}
+zle -N _narrow_to_region_marked
+bindkey "^X"    _narrow_to_region_marked
+
 set_prompt() {
     local LAST_EXIT_CODE=$?
     # [
