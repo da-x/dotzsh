@@ -230,22 +230,28 @@ function _narrow_to_region_marked()
 zle -N _narrow_to_region_marked
 bindkey "^X"    _narrow_to_region_marked
 
+LAST_EXIT_STATUS_COLLECTED=0
+
 set_prompt() {
     local LAST_EXIT_CODE=$?
+    local dh=`print -n "%{\033[1;38;2;0;127;127m%}"`
+    local gh2=`print -n "\033[38;2;110;110;110m"`
+
+    # Status Code
+    if [[ $LAST_EXIT_CODE != "0" ]] ; then
+	if [[ $LAST_EXIT_STATUS_COLLECTED != "1" ]] ; then
+	    echo
+	    echo "$gh2"\["${fg[white]}\$? -> $reset_color$fg[red]${(l:2::0:)$(( [##16] $LAST_EXIT_CODE))}$gh2"\]
+	fi
+	LAST_EXIT_STATUS_COLLECTED=1
+    fi
+
     # [
-    PS1="%{$fg_bold[white]%}[%{$reset_color%}"
+    PS1="%{$gh2%}[%{$reset_color%}"
 
     # Time
 
-    local dh=`print -n "%{\033[1;38;2;0;127;127m%}"`
     PS1+="${dh}%D{%H:%M}%{$reset_color%}"
-
-    # Status Code
-    if [[ $LAST_EXIT_CODE == "0" ]] ; then
-	PS1+=" %{$fg_bold[green]%}<%{$reset_color$fg[green]%}00%{$fg_bold[green]%}>%{$reset_color%}"
-    else
-	PS1+=" %{$fg_bold[red]%}<%{$reset_color$fg[red]%}${(l:2::0:)$(( [##16] $?))}%{$fg_bold[red]%}>%{$reset_color%}"
-    fi
 
     # Git status
     if git rev-parse --is-inside-work-tree 2> /dev/null | grep -q 'true' ; then
@@ -295,12 +301,13 @@ set_prompt() {
 
     # End
 
-    PS1+="%{$fg_bold[white]%}]%{$reset_color%}$ "
+    PS1+="%{$gh2%}]%{$fg_bold[white]%}\$%{${reset_color}%} "
 }
 
 precmd_functions+=set_prompt
 
 preexec () {
+    LAST_EXIT_STATUS_COLLECTED=0
     (( ${#_elapsed[@]} > 1000 )) && _elapsed=(${_elapsed[@]: -1000})
     _start=$SECONDS
 }
