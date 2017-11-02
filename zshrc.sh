@@ -271,6 +271,7 @@ set_prompt() {
     if [[ $_elapsed[-1] -ne 0 ]]; then
 	PS1+=' '
 	PS1+="%{$fg[magenta]%}$_elapsed[-1]%{$reset_color%}"
+	_elapsed=(0)
     fi
 
     # PID
