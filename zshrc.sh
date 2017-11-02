@@ -249,7 +249,7 @@ set_prompt() {
     fi
 
     # [
-    PS1="%{$gh2%}[%{$reset_color%}"
+    PS1="%{$gh2%}[ %{$reset_color%}"
 
     # Time
 
@@ -294,16 +294,25 @@ set_prompt() {
 
     local pwd=${PWD/#$HOME\//}
     local dirpwd=$(dirname ${pwd})
-    if [[ "$dirpwd" == "." ]] ;then
+    local basepwd=$(basename $(pwd))
+    if [[ "$pwd" == "/" ]] && [[ "$basepwd" == "/" ]]  ;then
+	basepwd="/"
 	dirpwd=""
+    elif [[ "$dirpwd" == "/" ]] && [[ "$basepwd" != "/" ]]  ;then
+	dirpwd="/"
+    elif [[ "$dirpwd" == "." ]] ;then
+	dirpwd=""
+    elif [[ "$pwd" == "$HOME" ]] ;then
+	dirpwd=""
+	basepwd=""
     else
 	dirpwd="$dirpwd/"
     fi
-    PS1+=" %{${HOST_PC_PROMPT_COLOR}%}${HOST_NAME_PROMPT_OVERRIDE}%{$reset_color$fg[white]%}:${dirpwd}%{$fg_bold[white]%}$(basename ${pwd})%{$reset_color%}"
+    PS1+=" %{${HOST_PC_PROMPT_COLOR}%}${HOST_NAME_PROMPT_OVERRIDE}%{$reset_color$fg[white]%}:${dirpwd}%{$fg_bold[white]%}${basepwd}%{$reset_color%}"
 
     # End
 
-    PS1+="%{$gh2%}]%{$fg_bold[white]%}\$%{${reset_color}%} "
+    PS1+="%{$gh2%} ]%{$fg_bold[white]%}\$%{${reset_color}%} "
 }
 
 precmd_functions+=set_prompt
