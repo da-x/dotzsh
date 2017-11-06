@@ -293,9 +293,9 @@ set_prompt() {
 
     # Path: http://stevelosh.com/blog/2010/02/my-extravagant-zsh-prompt/
 
-    local pwd=${PWD/#$HOME\//}
-    local dirpwd=$(dirname ${pwd})
-    local basepwd=$(basename $(pwd))
+    local pwd="${PWD/#$HOME\//}"
+    local dirpwd="${pwd:h}"
+    local basepwd="${pwd:t}"
     if [[ "$pwd" == "/" ]] && [[ "$basepwd" == "/" ]]  ;then
 	basepwd="/"
 	dirpwd=""
