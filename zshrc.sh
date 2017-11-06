@@ -40,6 +40,7 @@ alias godo='git todo'
 alias a='cat ${ZSH_ROOT}/zshrc.sh | grep ^alias | sort'
 alias v='vim -p'
 alias h='cd ~'
+alias fm='exo-open --launch FileManager'
 
 # Typos
 
