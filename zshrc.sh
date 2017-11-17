@@ -38,7 +38,7 @@ alias gamd='git amendNDA'
 alias gre='grep'
 alias godo='git todo'
 alias a='cat ${ZSH_ROOT}/zshrc.sh | grep ^alias | sort'
-alias v='vim -p'
+alias v='vim'
 alias h='cd ~'
 alias fm='exo-open --launch FileManager'
 
