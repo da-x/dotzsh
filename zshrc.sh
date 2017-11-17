@@ -39,6 +39,7 @@ alias gre='grep'
 alias godo='git todo'
 alias a='cat ${ZSH_ROOT}/zshrc.sh | grep ^alias | sort'
 alias v='vim'
+alias v-gls='v $(git ls-files ; git list-untracked)'
 alias h='cd ~'
 alias fm='exo-open --launch FileManager'
 
@@ -345,6 +346,13 @@ dotfiles () {
 	    echo "Unknown command $1"
 	    ;;
     esac
+}
+
+eoc-git() {
+    while [ true ] ; do
+        inotifywait -q -e modify -e create $(echo . ; git ls-files ; git list-untracked)
+        "$@"
+    done
 }
 
 function cd-to-backlink() {
