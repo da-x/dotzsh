@@ -43,6 +43,17 @@ alias v-gls='v $(git ls-files ; git list-untracked)'
 alias h='cd ~'
 alias fm='exo-open --launch FileManager'
 
+if [ -e /etc/redhat-release ] ; then
+    grep -q CentOS /etc/redhat-release
+    if [[ "?$"  == "0" ]] ; then
+	alias bring='sudo yum install'
+    else
+	alias bring='sudo dnf install'
+    fi
+else
+    alias bring='sudo apt-get install'
+fi
+
 # Typos
 
 alias gerp='grep'
