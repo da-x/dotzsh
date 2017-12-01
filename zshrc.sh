@@ -130,6 +130,8 @@ source ${ZSH_ROOT}/oh-my-zsh/oh-my-zsh.sh
 # source ${ZSH_ROOT}/oh-my-zsh/lib/completion.zsh
 source ${ZSH_ROOT}/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
+alias d='dirs -v | head -20'
+
 unset DISABLE_AUTO_UPDATE
 
 # History, part #2
