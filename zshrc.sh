@@ -61,6 +61,8 @@ alias rload='reload'
 alias rloa='reload'
 alias dc='cd'
 alias dmseg='dmesg'
+alias psf='ps --forest'
+alias psfa='psf -fe'
 
 # Env
 
