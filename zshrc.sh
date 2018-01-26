@@ -42,6 +42,8 @@ alias v='vim'
 alias v-gls='v $(git ls-files ; git list-untracked)'
 alias h='cd ~'
 alias fm='exo-open --launch FileManager'
+alias pfe='pty-for-each'
+alias pfes="pfe single '' --"
 
 if [ -e /etc/redhat-release ] ; then
     grep -q CentOS /etc/redhat-release
