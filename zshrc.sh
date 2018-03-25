@@ -330,6 +330,10 @@ set_prompt() {
     fi
     PS1+=" %{${HOST_PC_PROMPT_COLOR}%}${HOST_NAME_PROMPT_OVERRIDE}%{$reset_color$fg[white]%}:${dirpwd}%{$fg_bold[white]%}${basepwd}%{$reset_color%}"
 
+    if [[ "$VIMRUNTIME" != "" ]] ; then
+	PS1+="%{$gh2%} $fg[yellow]<%{$fg_bold[yellow]%}VIM%{$gh2%}$fg[yellow]>%{$reset_color%}"
+    fi
+
     # End
 
     PS1+="%{$gh2%} ]%{$fg_bold[white]%}\$%{${reset_color}%} "
