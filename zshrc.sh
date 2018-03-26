@@ -201,7 +201,17 @@ emit-current-git-root-relative() {
 }
 zle -N emit-current-git-root-relative
 
+emit-picked-git-branch-name() {
+    local s="$(git-mru-branch | pick)"
+
+    # Append 's' as if it was written manually, advancing the cursor
+    BUFFER="${BUFFER[1,$(($CURSOR))]}$s${BUFFER[$(($CURSOR + 1)),100000]}"
+    CURSOR=$(($CURSOR + $#s))
+}
+zle -N emit-picked-git-branch-name
+
 bindkey "^[gb" emit-current-git-branch-name
+bindkey "^[gp" emit-picked-git-branch-name
 bindkey "^[gh" emit-current-git-hash
 bindkey "^[gr" emit-current-git-path-to-root
 bindkey "^[gd" emit-current-git-root-relative
