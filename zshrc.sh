@@ -210,11 +210,57 @@ emit-picked-git-branch-name() {
 }
 zle -N emit-picked-git-branch-name
 
+my-zsh-git-checkout() {
+    BUFFER=""
+    echo
+    zle -M "$(git checkout $(git-mru-branch | pick))"
+    zle accept-line
+}
+zle -N my-zsh-git-checkout
+
+my-zsh-git-log() {
+    git log
+}
+zle -N my-zsh-git-log
+
+my-zsh-git-show() {
+    git show
+}
+zle -N my-zsh-git-show
+
+my-zsh-git-diff() {
+    git diff
+}
+zle -N my-zsh-git-diff
+
+my-zsh-git-diff-cached() {
+    git diff --cached
+}
+zle -N my-zsh-git-diff
+
+my-zsh-git-status() {
+    git status | less -R
+}
+zle -N my-zsh-git-status
+
+my-zsh-ls() {
+    ls -l | less -R
+}
+zle -N my-zsh-ls
+
 bindkey "^[gb" emit-current-git-branch-name
 bindkey "^[gp" emit-picked-git-branch-name
 bindkey "^[gh" emit-current-git-hash
 bindkey "^[gr" emit-current-git-path-to-root
-bindkey "^[gd" emit-current-git-root-relative
+bindkey "^[gR" emit-current-git-root-relative
+bindkey "^[gc" my-zsh-git-checkout
+bindkey "^[gl" my-zsh-git-log
+bindkey "^[gs" my-zsh-git-show
+bindkey "^[gS" my-zsh-git-status
+bindkey "^[gd" my-zsh-git-diff
+bindkey "^[gD" my-zsh-git-diff-cached
+bindkey "^[ll" my-zsh-ls
+bindkey "^[l^[l" my-zsh-ls
 
 # Prompt
 
