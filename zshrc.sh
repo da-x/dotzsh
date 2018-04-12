@@ -439,4 +439,7 @@ function cd-to-backlink() {
 source ${ZSH_ROOT}/zsh-titles/titles.plugin.zsh
 
 cd-to-backlink
+unsetopt share_history
+setopt inc_append_history
+
 
