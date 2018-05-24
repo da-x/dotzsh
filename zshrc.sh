@@ -66,6 +66,7 @@ alias gsh='git show'
 alias godo='git todo'
 alias gftl='git ftl'
 alias gelc='git elc'
+alias greon='git reon'
 
 alias gre='grep'
 alias gepr='grep'
