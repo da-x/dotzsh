@@ -439,6 +439,18 @@ preexec () {
     _start=$SECONDS
 }
 
+if [ -n "$TMUX" ]; then
+    function tmux-refresh {
+	for i in $(tmux show-environment | grep -v "^-") ; do 
+	    export $i
+	done
+    }
+else
+    function tmux-refresh { }
+fi
+
+tmux-refresh
+
 precmd () {
     (( _start >= 0 )) && _elapsed+=($(( SECONDS-_start )))
     _start=-1
