@@ -444,6 +444,10 @@ if [ -n "$TMUX" ]; then
 	for i in $(tmux show-environment | grep -v "^-") ; do 
 	    export $i
 	done
+	tmux show-environment | grep "^-XAUTHORITY" > /dev/null
+	if [[ $? == 0 ]] ; then
+	    unset XAUTHORITY
+	fi
     }
 else
     function tmux-refresh { }
