@@ -9,6 +9,9 @@ HISTFILE=${ZSH_ROOT}/history
 # Aliases
 
 alias -s c=vim
+alias -s h=vim
+alias -s toml=vim
+alias -s md=vim
 
 alias g='git'
 alias mv='mv -v'
