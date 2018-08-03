@@ -448,32 +448,51 @@ set_prompt() {
 
 precmd_functions+=set_prompt
 
-preexec () {
-    LAST_EXIT_STATUS_COLLECTED=0
-    (( ${#_elapsed[@]} > 1000 )) && _elapsed=(${_elapsed[@]: -1000})
-    _start=$SECONDS
-}
+case $- in
+  *i*) _is_interactive=1 ;;
+  *) _is_interactive=0 ;;
+esac
 
-if [ -n "$TMUX" ]; then
-    function tmux-refresh {
-	for i in $(tmux show-environment | grep -v "^-") ; do 
-	    export $i
-	done
-	tmux show-environment | grep "^-XAUTHORITY" > /dev/null
-	if [[ $? == 0 ]] ; then
-	    unset XAUTHORITY
-	fi
+if [[ "$_is_interactive" == "1" ]] ; then
+    if [ -n "$TMUX" ]; then
+	function tmux-refresh {
+	    for i in $(tmux show-environment | grep -v "^-") ; do 
+		export $i
+	    done
+	    tmux show-environment | grep "^-XAUTHORITY" > /dev/null
+	    if [[ $? == 0 ]] ; then
+		unset XAUTHORITY
+	    fi
+	    _last_tmux_refresh=$SECONDS
+	}
+
+	function tmux-check-refresh {
+	    if [[ $(( SECONDS-_last_tmux_refresh >= 3)) == 1 ]] ; then
+		tmux-refresh
+	    fi
+	}
+    else
+	function tmux-refresh { }
+
+	function tmux-check-refresh {
+	}
+    fi
+
+    preexec () {
+	LAST_EXIT_STATUS_COLLECTED=0
+	(( ${#_elapsed[@]} > 1000 )) && _elapsed=(${_elapsed[@]: -1000})
+	_start=$SECONDS
+
+	tmux-check-refresh
     }
-else
-    function tmux-refresh { }
+
+    tmux-refresh
+
+    precmd () {
+	(( _start >= 0 )) && _elapsed+=($(( SECONDS-_start )))
+	_start=-1
+    }
 fi
-
-tmux-refresh
-
-precmd () {
-    (( _start >= 0 )) && _elapsed+=($(( SECONDS-_start )))
-    _start=-1
-}
 
 reload () {
     exec zsh
