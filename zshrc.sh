@@ -403,7 +403,9 @@ set_prompt() {
     # Mode
 
     if [[ $PROMPT_MODE != "" ]] ; then
-	PS1+="%{$bg[blue]$fg[black]%}$PROMPT_MODE%{$reset_color%} "
+	for i in $(echo $PROMPT_MODE); do
+	    PS1+="%{$bg[blue]$fg[black]%}$i%{$reset_color%} "
+	done
     fi
 
     # Time
