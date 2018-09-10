@@ -188,6 +188,8 @@ bindkey "^[[6;5~" my-noop-func
 
 # Autoload stuff
 
+fpath=($HOME/.zsh/completions $fpath)
+
 autoload -U compaudit compinit
 autoload -U colors && colors
 
