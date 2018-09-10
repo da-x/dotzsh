@@ -476,11 +476,13 @@ set_prompt() {
 
     # End
 
+    PS1+="%{$gh2%} ]"
+
     if [[ $PROMPT_MODE != "" ]] ; then
 	PS1+="%{$bg[blue]$fg[black]%}"
     fi
 
-    PS1+="%{$gh2%} ]%{$fg_bold[white]%}\$%{${reset_color}%} "
+    PS1+="%{$fg_bold[white]%}\$%{${reset_color}%} "
 }
 
 precmd_functions+=set_prompt
