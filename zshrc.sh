@@ -95,6 +95,29 @@ alias h='cd ~'
 alias fm='exo-open --launch FileManager'
 alias pfe='pty-for-each'
 alias pfes="pfe single '' --"
+alias rgsl='rg --sort-files --color always'
+
+get-bgc() {
+    v=$(tmux select-pane -g | grep 'bg=#' | awk -F'bg=#' '{print $2}')
+}
+
+bgc() {
+    tmux select-pane -P "bg=#$1"
+}
+
+if [ -n "$TMUX" ]; then
+    sudo() {
+	oldbgc=$(get-bgc)
+	if [[ $oldbgc == '' ]] ; then
+	    oldbgc=000000
+	fi
+	bgc 200000
+	/usr/bin/sudo "$@"
+	e=$?
+	bgc ${oldbgc}
+	return $e
+    }
+fi
 
 if [ -e /etc/redhat-release ] ; then
     grep -q CentOS /etc/redhat-release
@@ -377,6 +400,12 @@ set_prompt() {
     # [
     PS1="%{$gh2%}[ %{$reset_color%}"
 
+    # Mode
+
+    if [[ $PROMPT_MODE != "" ]] ; then
+	PS1+="%{$bg[blue]$fg[black]%}$PROMPT_MODE%{$reset_color%} "
+    fi
+
     # Time
 
     PS1+="${dh}%D{%H:%M}%{$reset_color%}"
@@ -442,6 +471,10 @@ set_prompt() {
     fi
 
     # End
+
+    if [[ $PROMPT_MODE != "" ]] ; then
+	PS1+="%{$bg[blue]$fg[black]%}"
+    fi
 
     PS1+="%{$gh2%} ]%{$fg_bold[white]%}\$%{${reset_color}%} "
 }
@@ -527,5 +560,3 @@ source ${ZSH_ROOT}/zsh-titles/titles.plugin.zsh
 cd-to-backlink
 unsetopt share_history
 setopt inc_append_history
-
-
