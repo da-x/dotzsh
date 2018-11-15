@@ -299,10 +299,17 @@ my-zsh-git-log() {
 }
 zle -N my-zsh-git-log
 
-my-zsh-git-show() {
-    git show
-}
+my-zsh-git-show() { git show }
 zle -N my-zsh-git-show
+
+my-zsh-git-show-head-1() { git show HEAD~1 }
+zle -N my-zsh-git-show-head-1
+
+my-zsh-git-show-head-2() { git show HEAD~2 }
+zle -N my-zsh-git-show-head-2
+
+my-zsh-git-show-head-3() { git show HEAD~3 }
+zle -N my-zsh-git-show-head-3
 
 my-zsh-git-diff() {
     git diff
@@ -312,7 +319,7 @@ zle -N my-zsh-git-diff
 my-zsh-git-diff-cached() {
     git diff --cached
 }
-zle -N my-zsh-git-diff
+zle -N my-zsh-git-diff-cached
 
 my-zsh-git-status() {
     git status | less -R
@@ -332,6 +339,9 @@ bindkey "^[gR" emit-current-git-root-relative
 bindkey "^[gc" my-zsh-git-checkout
 bindkey "^[gl" my-zsh-git-log
 bindkey "^[gs" my-zsh-git-show
+bindkey "^[gs1" my-zsh-git-show-head-1
+bindkey "^[gs2" my-zsh-git-show-head-2
+bindkey "^[gs3" my-zsh-git-show-head-3
 bindkey "^[gS" my-zsh-git-status
 bindkey "^[gd" my-zsh-git-diff
 bindkey "^[gD" my-zsh-git-diff-cached
