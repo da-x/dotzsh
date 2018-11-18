@@ -573,6 +573,11 @@ function cd-to-backlink() {
 
 source ${ZSH_ROOT}/zsh-titles/titles.plugin.zsh
 
+which exa 2>/dev/null >/dev/null
+if [[ "$?" == "0" ]] ; then
+    alias ll='exa -l'
+fi
+
 cd-to-backlink
 unsetopt share_history
 setopt inc_append_history
