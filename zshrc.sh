@@ -278,7 +278,7 @@ emit-current-git-root-relative() {
 zle -N emit-current-git-root-relative
 
 emit-picked-git-branch-name() {
-    local s="$(git-mru-branch | pick)"
+    local s="$(git show-ref | grep " refs/remotes/" | cut -c55- | fzf)"
 
     # Append 's' as if it was written manually, advancing the cursor
     BUFFER="${BUFFER[1,$(($CURSOR))]}$s${BUFFER[$(($CURSOR + 1)),100000]}"
