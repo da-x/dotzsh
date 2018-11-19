@@ -89,7 +89,18 @@ alias gepr='grep'
 alias gerp='grep'
 
 alias a='cat ${ZSH_ROOT}/zshrc.sh | grep ^alias | sort'
-alias v='vim'
+
+which nvim 2>/dev/null >/dev/null
+if [[ "$?" == "0" ]] ; then
+    alias v='nvim'
+    EDITOR="nvim"
+    VISUAL="nvim"
+else
+    alias v='vim'
+    EDITOR="vim"
+    VISUAL="vim"
+fi
+
 alias v-gls='v $(git ls-files ; git list-untracked)'
 alias h='cd ~'
 alias fm='exo-open --launch FileManager'
@@ -142,8 +153,6 @@ alias psfa='psf -fe'
 
 # Env
 
-EDITOR="vim"
-VISUAL="vim"
 GREP_COLORS='ms=38;5;47;1:mc=01;34:sl=:cx=:fn=38;5;117:ln=38;5;32:bn=31:se=38;5;50;1'
 LESSOPEN="|fancydiff file %s -e"
 
