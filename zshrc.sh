@@ -116,6 +116,10 @@ bgc() {
     tmux select-pane -P "bg=#$1"
 }
 
+help() {
+    less ${ZSH_ROOT}/README.md
+}
+
 if [ -n "$TMUX" ]; then
     sudo() {
 	oldbgc=$(get-bgc)
@@ -342,41 +346,51 @@ zle -N my-zsh-ls
 
 my-zsh-edit-git-file() {
     local picked=$(git ls-files | fzf)
-    ${EDITOR} ${picked}
+    if [[ "$picked" != "" ]] ; then
+        ${EDITOR} ${picked}
+    fi
 }
 zle -N my-zsh-edit-git-file
 
 my-zsh-edit-status-file() {
-    local picked=$(git status --porcelain | fzf | awk -F" " '{print $2}')
-    ${EDITOR} ${picked}
+    local picked=$(git status --porcelain | fzf -1 -0 | awk -F" " '{print $2}')
+    if [[ "$picked" != "" ]] ; then
+        ${EDITOR} ${picked}
+    fi
 }
 zle -N my-zsh-edit-status-file
 
-# A-g bindings
-bindkey "^[gb" emit-current-git-branch-name
-bindkey "^[gp" emit-picked-git-branch-name
-bindkey "^[gh" emit-current-git-hash
-bindkey "^[gr" emit-current-git-path-to-root
-bindkey "^[gR" emit-current-git-root-relative
-bindkey "^[gc" my-zsh-git-checkout
-bindkey "^[gl" my-zsh-git-log
-bindkey "^[gs" my-zsh-git-show
-bindkey "^[gs1" my-zsh-git-show-head-1
-bindkey "^[gs2" my-zsh-git-show-head-2
-bindkey "^[gs3" my-zsh-git-show-head-3
-bindkey "^[gS" my-zsh-git-status
-bindkey "^[gd" my-zsh-git-diff
-bindkey "^[gD" my-zsh-git-diff-cached
+my-zsh-edit-HEAD-file() {
+    local picked=$(git show  --name-status --pretty='' | fzf -1 -0 | awk -F" " '{print $2}')
+    if [[ "$picked" != "" ]] ; then
+        ${EDITOR} ${picked}
+    fi
+}
+zle -N my-zsh-edit-HEAD-file
+
 bindkey "^[ll" my-zsh-ls
 bindkey "^[l^[l" my-zsh-ls
 
-# C-g bindings
-bindkey "^Gf" my-zsh-edit-git-file
-bindkey "^Gs" my-zsh-edit-status-file
-bindkey "^Gg" my-zsh-git-log
-bindkey "^Gt" my-zsh-git-checkout
+# C-g bindings for Git
+
+bindkey "^GB" emit-current-git-branch-name
+bindkey "^GH" emit-current-git-hash
+bindkey "^GP" emit-picked-git-branch-name
+bindkey "^GR" emit-current-git-root-relative
+bindkey "^GT" emit-current-git-path-to-root
+bindkey "^Gc" my-zsh-git-checkout
 bindkey "^Gd" my-zsh-git-diff
-bindkey "^Ge" my-zsh-git-diff-cached
+bindkey "^Ge" my-zsh-edit-status-file
+bindkey "^Gg" my-zsh-edit-git-file
+bindkey "^Gh" my-zsh-edit-HEAD-file
+bindkey "^Gl" my-zsh-git-log
+bindkey "^Gn" my-zsh-git-diff-cached
+bindkey "^Gs" my-zsh-git-status
+bindkey "^Gt" my-zsh-git-checkout
+bindkey "^Gz" my-zsh-git-show
+bindkey "^Gz1" my-zsh-git-show-head-1
+bindkey "^Gz2" my-zsh-git-show-head-2
+bindkey "^Gz3" my-zsh-git-show-head-3
 
 # Prompt
 
