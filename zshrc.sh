@@ -340,6 +340,19 @@ my-zsh-ls() {
 }
 zle -N my-zsh-ls
 
+my-zsh-edit-git-file() {
+    local picked=$(git ls-files | fzf)
+    ${EDITOR} ${picked}
+}
+zle -N my-zsh-edit-git-file
+
+my-zsh-edit-status-file() {
+    local picked=$(git status --porcelain | fzf | awk -F" " '{print $2}')
+    ${EDITOR} ${picked}
+}
+zle -N my-zsh-edit-status-file
+
+# A-g bindings
 bindkey "^[gb" emit-current-git-branch-name
 bindkey "^[gp" emit-picked-git-branch-name
 bindkey "^[gh" emit-current-git-hash
@@ -356,6 +369,14 @@ bindkey "^[gd" my-zsh-git-diff
 bindkey "^[gD" my-zsh-git-diff-cached
 bindkey "^[ll" my-zsh-ls
 bindkey "^[l^[l" my-zsh-ls
+
+# C-g bindings
+bindkey "^Gf" my-zsh-edit-git-file
+bindkey "^Gs" my-zsh-edit-status-file
+bindkey "^Gg" my-zsh-git-log
+bindkey "^Gt" my-zsh-git-checkout
+bindkey "^Gd" my-zsh-git-diff
+bindkey "^Ge" my-zsh-git-diff-cached
 
 # Prompt
 

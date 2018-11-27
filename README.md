@@ -19,5 +19,10 @@ The next commands also preserve the command line:
 * `A-g s2` - Git show HEAD~2
 * `A-g s3` - Git show HEAD~3
 * `A-g S` - Git status
-* `A-g d` - Git diff
-* `A-g D` - Git diff --cached
+
+* `C-g f` - List of Git files
+* `C-g s` - List of Git files in status
+* `C-g g` - List of commits
+* `A-g d` / `C-g d` - Git diff from HEAD
+* `A-g D` / `C-g e` - Git diff of staged changes
+* `C-g t` - Do a 'Git checkout' to another branch
