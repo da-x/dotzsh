@@ -112,6 +112,10 @@ get-bgc() {
     v=$(tmux select-pane -g | grep 'bg=#' | awk -F'bg=#' '{print $2}')
 }
 
+alias rex1='rex wait-on 1 -- '
+alias rex2='rex wait-on 2 -- '
+alias rex3='rex wait-on 3 -- '
+
 bgc() {
     tmux select-pane -P "bg=#$1"
 }
