@@ -345,25 +345,25 @@ my-zsh-ls() {
 zle -N my-zsh-ls
 
 my-zsh-edit-git-file() {
-    local picked=$(git ls-files | fzf)
+    local picked=$(git ls-files | fzf -m -1 -0)
     if [[ "$picked" != "" ]] ; then
-        ${EDITOR} ${picked}
+	${EDITOR} $(echo ${picked})
     fi
 }
 zle -N my-zsh-edit-git-file
 
 my-zsh-edit-status-file() {
-    local picked=$(git status --porcelain | fzf -1 -0 | awk -F" " '{print $2}')
+    local picked=$(git status --porcelain | fzf -m -1 -0 | awk -F" " '{print $2}')
     if [[ "$picked" != "" ]] ; then
-        ${EDITOR} ${picked}
+	${EDITOR} $(echo ${picked})
     fi
 }
 zle -N my-zsh-edit-status-file
 
 my-zsh-edit-HEAD-file() {
-    local picked=$(git show  --name-status --pretty='' | fzf -1 -0 | awk -F" " '{print $2}')
+    local picked=$(git show  --name-status --pretty='' | fzf -m -1 -0 | awk -F" " '{print $2}')
     if [[ "$picked" != "" ]] ; then
-        ${EDITOR} ${picked}
+	${EDITOR} $(echo ${picked})
     fi
 }
 zle -N my-zsh-edit-HEAD-file
