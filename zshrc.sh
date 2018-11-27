@@ -298,7 +298,7 @@ zle -N emit-picked-git-branch-name
 my-zsh-git-checkout() {
     BUFFER=""
     echo
-    zle -M "$(git checkout $(git-mru-branch | pick))"
+    zle -M "$(git checkout $(git-mru-branch | fzf))"
     zle accept-line
 }
 zle -N my-zsh-git-checkout
