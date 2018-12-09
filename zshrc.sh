@@ -162,7 +162,12 @@ alias psfa='psf -fe'
 # Env
 
 GREP_COLORS='ms=38;5;47;1:mc=01;34:sl=:cx=:fn=38;5;117:ln=38;5;32:bn=31:se=38;5;50;1'
-LESSOPEN="|fancydiff file %s -e"
+
+which fancydiff 2>/dev/null >/dev/null
+if [[ "$?" == "0" ]] ; then
+    LESS='-R'
+    LESSOPEN="|fancydiff file %s -e"
+fi
 
 # Terminal setup
 
@@ -374,6 +379,18 @@ zle -N my-zsh-edit-HEAD-file
 
 bindkey "^[ll" my-zsh-ls
 bindkey "^[l^[l" my-zsh-ls
+
+batless() {
+    LESS='-R' LESSOPEN="|bat --color=always --style=plain %s" less "$@"
+}
+
+# Ctrl-F1
+show-runtime-help() {
+    batless ${ZSH_ROOT}/README.md
+}
+
+zle -N show-runtime-help
+bindkey "^[[1;5P" show-runtime-help
 
 # C-g bindings for Git
 
