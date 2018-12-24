@@ -101,6 +101,10 @@ else
     VISUAL="vim"
 fi
 
+vgg() {
+    v -c "Gg $@"
+}
+
 alias v-gls='v $(git ls-files ; git list-untracked)'
 alias h='cd ~'
 alias fm='exo-open --launch FileManager'
