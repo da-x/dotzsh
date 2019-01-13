@@ -642,9 +642,14 @@ function cd-to-backlink() {
 
 source ${ZSH_ROOT}/zsh-titles/titles.plugin.zsh
 
-which exa 2>/dev/null >/dev/null
+which lsd 2>/dev/null >/dev/null
 if [[ "$?" == "0" ]] ; then
-    alias ll='exa -l'
+    alias ll='lsd -l'
+else
+    which exa 2>/dev/null >/dev/null
+    if [[ "$?" == "0" ]] ; then
+	alias ll='exa -l'
+    fi
 fi
 
 cd-to-backlink
