@@ -427,6 +427,11 @@ HOST_NAME_PROMPT_OVERRIDE=$(hostname)
 HOST_PC_PROMPT_COLOR="$fg_bold[magenta]"
 
 if [[ -e ${ZSH_ROOT}/per-host-config.zsh ]] ; then
+    if [[ ! -h "${ZSH_ROOT}/per-host-config.zsh" ]] ; then
+	echo ${ZSH_ROOT}/per-host-config.zsh should be a symlink to a
+	echo different place where it is unaffected by git clean in the
+	echo ${ZSH_ROOT} directory.
+    fi
     source ${ZSH_ROOT}/per-host-config.zsh
 fi
 
