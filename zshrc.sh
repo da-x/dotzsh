@@ -353,7 +353,7 @@ my-zsh-git-status() {
 zle -N my-zsh-git-status
 
 my-zsh-ls() {
-    ls -l | less -R
+    pfes lsd -l | less -R
 }
 zle -N my-zsh-ls
 
@@ -383,10 +383,17 @@ zle -N my-zsh-edit-HEAD-file
 
 bindkey "^[ll" my-zsh-ls
 bindkey "^[l^[l" my-zsh-ls
+bindkey "^\\" fzf-cd-widget
+bindkey "^]" fzf-file-widget
+bindkey -r "^[l"
 
 batless() {
     LESS='-R' LESSOPEN="|bat --color=always --style=plain %s" less "$@"
 }
+
+export FZF_ALT_C_COMMAND="fd -t d ."
+export FZF_DEFAULT_COMMAND="fd ."
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 
 # Ctrl-F1
 show-runtime-help() {
@@ -404,15 +411,25 @@ bindkey "^GP" emit-picked-git-branch-name
 bindkey "^GR" emit-current-git-root-relative
 bindkey "^GT" emit-current-git-path-to-root
 bindkey "^Gc" my-zsh-git-checkout
+bindkey "^Gc" my-zsh-git-checkout
 bindkey "^Gd" my-zsh-git-diff
+bindkey "^G^D" my-zsh-git-diff
 bindkey "^Ge" my-zsh-edit-status-file
+bindkey "^G^E" my-zsh-edit-status-file
 bindkey "^Gg" my-zsh-edit-git-file
+bindkey "^G^G" my-zsh-edit-git-file
 bindkey "^Gh" my-zsh-edit-HEAD-file
+bindkey "^G^H" my-zsh-edit-HEAD-file
 bindkey "^Gl" my-zsh-git-log
+bindkey "^G^L" my-zsh-git-log
 bindkey "^Gn" my-zsh-git-diff-cached
+bindkey "^G^N" my-zsh-git-diff-cached
 bindkey "^Gs" my-zsh-git-status
+bindkey "^G^S" my-zsh-git-status
 bindkey "^Gt" my-zsh-git-checkout
+bindkey "^G^T" my-zsh-git-checkout
 bindkey "^Gz" my-zsh-git-show
+bindkey "^G^Z" my-zsh-git-show
 bindkey "^Gz1" my-zsh-git-show-head-1
 bindkey "^Gz2" my-zsh-git-show-head-2
 bindkey "^Gz3" my-zsh-git-show-head-3
@@ -467,7 +484,7 @@ function _narrow_to_region_marked()
 zle -N _narrow_to_region_marked
 bindkey "^X"    _narrow_to_region_marked
 
-LAST_EXIT_STATUS_COLLECTED=0
+LAST_EXIT_STATUS_COLLECTED=1
 
 set_prompt() {
     local LAST_EXIT_CODE=$?
