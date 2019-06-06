@@ -244,7 +244,9 @@ unset DISABLE_AUTO_UPDATE
 
 setopt no_inc_append_history
 setopt histignoredups
+setopt histignorealldups
 setopt histignorespace
+setopt histfindnodups
 setopt extended_history
 setopt share_history
 setopt hist_verify
