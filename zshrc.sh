@@ -383,6 +383,14 @@ my-zsh-edit-HEAD-file() {
 }
 zle -N my-zsh-edit-HEAD-file
 
+my-zsh-edit-conflicted-file() {
+    local picked=$(git diff --name-only --diff-filter=U | fzf -m -1 -0)
+    if [[ "$picked" != "" ]] ; then
+	${EDITOR} $(echo ${picked})
+    fi
+}
+zle -N my-zsh-edit-conflicted-file
+
 bindkey "^[ll" my-zsh-ls
 bindkey "^[l^[l" my-zsh-ls
 bindkey "^\\" fzf-cd-widget
@@ -422,6 +430,8 @@ bindkey "^Gg" my-zsh-edit-git-file
 bindkey "^G^G" my-zsh-edit-git-file
 bindkey "^Gh" my-zsh-edit-HEAD-file
 bindkey "^G^H" my-zsh-edit-HEAD-file
+bindkey "^Gq" my-zsh-edit-conflicted-file
+bindkey "^G^q" my-zsh-edit-conflicted-file
 bindkey "^Gl" my-zsh-git-log
 bindkey "^G^L" my-zsh-git-log
 bindkey "^Gn" my-zsh-git-diff-cached
