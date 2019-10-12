@@ -527,6 +527,13 @@ set_prompt() {
 
     PS1+="${dh}%D{%H:%M}%{$reset_color%}"
 
+    if [[ "${_notify_activated}" == "1" ]] ; then
+	PS1+=" %{$fg_bold[white]%}["
+	PS1+="%{$fg_bold[magenta]%}NOTIF"
+	PS1+="%{$fg_bold[white]%}]"
+	PS1+="%{$reset_color%}"
+    fi
+
     # Git status
     if git rev-parse --is-inside-work-tree 2> /dev/null | grep -q 'true' ; then
 	PS1+=' '
@@ -541,6 +548,20 @@ set_prompt() {
 
     # Timer: http://stackoverflow.com/questions/2704635/is-there-a-way-to-find-the-running-time-of-the-last-executed-command-in-the-shel
     if [[ $_elapsed[-1] -ne 0 ]]; then
+	if [[ "${_notify_activated}" == "1" ]] ; then
+	    _executed=$(fc -l -1 | awk '{$1=""}1')
+
+	    local _desktop_now=$(xdotool get_desktop)
+
+	    if [[ "$_desktop_now" != "$_desktop_at_preexec" ]] ; then
+		if [[ "$LAST_EXIT_CODE" != "0" ]] ; then
+		    xnotify -b '#700000' "Error[$LAST_EXIT_CODE]:${_executed}" &|
+		else
+		    xnotify -b '#007000' "Success:${_executed}" &|
+		fi
+	    fi
+	fi
+
 	PS1+=' '
 	PS1+="%{$fg[magenta]%}$_elapsed[-1]%{$reset_color%}"
 	_elapsed=(0)
@@ -636,6 +657,10 @@ if [[ "$_is_interactive" == "1" ]] ; then
 	_start=$SECONDS
 
 	tmux-check-refresh
+
+	if [[ "${_notify_activated}" == "1" ]] ; then
+	    _desktop_at_preexec=$(xdotool get_desktop)
+	fi
     }
 
     tmux-refresh
@@ -648,6 +673,14 @@ fi
 
 reload () {
     exec zsh
+}
+
+notify-activate () {
+    export _notify_activated=1
+}
+
+notify-deactivate () {
+    export _notify_activated=0
 }
 
 dotfiles () {
