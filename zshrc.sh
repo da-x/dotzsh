@@ -704,7 +704,7 @@ eoc-git() {
 }
 
 function cd-to-backlink() {
-    $(python ${ZSH_ROOT}/backlink.py)
+    $(python2 ${ZSH_ROOT}/backlink.py)
 }
 
 source ${ZSH_ROOT}/zsh-titles/titles.plugin.zsh
