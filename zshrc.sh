@@ -228,8 +228,32 @@ setopt multios
 
 DISABLE_AUTO_UPDATE=true
 
+# Per-directory history
+
 HISTORY_BASE=$HOME/var/zsh/.per-directory-history
-PER_DIRECTORY_HISTORY_TOGGLE="^n"
+HISTORY_START_WITH_GLOBAL=true
+PER_DIRECTORY_HISTORY_TOGGLE="^N^N"
+
+per-directory-history-edit() {
+    v ${HISTORY_BASE}/$(realpath ${PWD})/history
+}
+zle -N per-directory-history-edit
+
+pick-from-other-history() {
+    per-directory-history-toggle-history
+    fzf-history-widget
+    per-directory-history-toggle-history
+}
+zle -N pick-from-other-history
+
+bindkey "^Ny" per-directory-history-edit
+bindkey "^N^y" per-directory-history-edit
+bindkey "^Nh" pick-from-other-history
+bindkey "^N^h" pick-from-other-history
+bindkey "^Nr" pick-from-other-history
+bindkey "^N^r" pick-from-other-history
+
+# Oh-my-zsh and plugins activation
 
 plugins=(per-directory-history)
 ZSH=${ZSH_ROOT}/oh-my-zsh
