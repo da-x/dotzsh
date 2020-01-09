@@ -228,7 +228,10 @@ setopt multios
 
 DISABLE_AUTO_UPDATE=true
 
-plugins=()
+HISTORY_BASE=$HOME/var/zsh/.per-directory-history
+PER_DIRECTORY_HISTORY_TOGGLE="^n"
+
+plugins=(per-directory-history)
 ZSH=${ZSH_ROOT}/oh-my-zsh
 source ${ZSH_ROOT}/oh-my-zsh/oh-my-zsh.sh
 # source ${ZSH_ROOT}/oh-my-zsh/lib/history.zsh
