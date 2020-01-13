@@ -255,7 +255,11 @@ bindkey "^N^r" pick-from-other-history
 
 # Oh-my-zsh and plugins activation
 
-plugins=(per-directory-history)
+#
+# problem: per-directory history tends to kill the global history occasionally, it seems.
+#
+# plugins=(per-directory-history)
+plugins=()
 ZSH=${ZSH_ROOT}/oh-my-zsh
 source ${ZSH_ROOT}/oh-my-zsh/oh-my-zsh.sh
 # source ${ZSH_ROOT}/oh-my-zsh/lib/history.zsh
