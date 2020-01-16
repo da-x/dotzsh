@@ -228,37 +228,8 @@ setopt multios
 
 DISABLE_AUTO_UPDATE=true
 
-# Per-directory history
-
-HISTORY_BASE=$HOME/var/zsh/.per-directory-history
-HISTORY_START_WITH_GLOBAL=true
-PER_DIRECTORY_HISTORY_TOGGLE="^N^N"
-
-per-directory-history-edit() {
-    v ${HISTORY_BASE}/$(realpath ${PWD})/history
-}
-zle -N per-directory-history-edit
-
-pick-from-other-history() {
-    per-directory-history-toggle-history
-    fzf-history-widget
-    per-directory-history-toggle-history
-}
-zle -N pick-from-other-history
-
-bindkey "^Ny" per-directory-history-edit
-bindkey "^N^y" per-directory-history-edit
-bindkey "^Nh" pick-from-other-history
-bindkey "^N^h" pick-from-other-history
-bindkey "^Nr" pick-from-other-history
-bindkey "^N^r" pick-from-other-history
-
 # Oh-my-zsh and plugins activation
 
-#
-# problem: per-directory history tends to kill the global history occasionally, it seems.
-#
-# plugins=(per-directory-history)
 plugins=()
 ZSH=${ZSH_ROOT}/oh-my-zsh
 source ${ZSH_ROOT}/oh-my-zsh/oh-my-zsh.sh
@@ -281,6 +252,42 @@ setopt histfindnodups
 setopt extended_history
 setopt share_history
 setopt hist_verify
+setopt histsavecwd 2>&1 | grep -q "no such option"
+
+no_histsavecwd="$?"
+
+#
+# Per-directory history
+#
+# Based on a modified `zsh' from:
+#
+#    https://github.com/da-x/zsh/tree/per-directory-history
+#
+
+if [[ "$no_histsavecwd" == "1" ]] ; then
+    setopt histsavecwd
+    # CTRL-R - Paste the selected command from history into the command line
+    fzf-per-directory-history-widget() {
+      local selected num
+      setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
+      selected=( $(fc -crl 1 |
+	FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS -n2..,.. --tiebreak=index --bind=ctrl-r:toggle-sort $FZF_CTRL_R_OPTS --query=${(qqq)LBUFFER} +m" $(__fzfcmd)) )
+      local ret=$?
+      if [ -n "$selected" ]; then
+	num=$selected[1]
+	if [ -n "$num" ]; then
+	  zle vi-fetch-history -n $num
+	fi
+      fi
+      zle reset-prompt
+      return $ret
+    }
+
+    zle     -N   fzf-per-directory-history-widget
+    bindkey '^Ne' fzf-per-directory-history-widget
+    bindkey '^Nh' fzf-per-directory-history-widget
+    bindkey '^N^H' fzf-per-directory-history-widget
+fi
 
 up-line-or-local-history() {
     zle set-local-history 1
