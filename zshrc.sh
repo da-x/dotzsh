@@ -227,6 +227,7 @@ setopt multios
 # External stuff
 
 DISABLE_AUTO_UPDATE=true
+CASE_SENSITIVE=true
 
 # Oh-my-zsh and plugins activation
 
