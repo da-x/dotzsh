@@ -20,6 +20,7 @@ Command line editing:
 Other:
 
 * `C-l` - Clear screen
+* `C-h`, `C-Backspace` - Change directory to parent
 
 Quick invocations (inquires):
 

@@ -430,9 +430,16 @@ my-zsh-edit-conflicted-file() {
 }
 zle -N my-zsh-edit-conflicted-file
 
+my-zsh-cd-parent() {
+    cd ..
+    fzf-redraw-prompt
+}
+zle -N my-zsh-cd-parent
+
 bindkey "^[ll" my-zsh-ls
 bindkey "^[l^[l" my-zsh-ls
 bindkey "^\\" fzf-cd-widget
+bindkey "^H" my-zsh-cd-parent
 bindkey "^]" fzf-file-widget
 bindkey -r "^[l"
 
