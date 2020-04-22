@@ -492,6 +492,12 @@ bindkey "^Gz1" my-zsh-git-show-head-1
 bindkey "^Gz2" my-zsh-git-show-head-2
 bindkey "^Gz3" my-zsh-git-show-head-3
 
+# Edit the current command line in $EDITOR
+
+autoload -U edit-command-line
+zle -N edit-command-line
+bindkey '^[e' edit-command-line
+
 # Prompt
 
 # (took stuff from https://github.com/Parth/dotfiles)

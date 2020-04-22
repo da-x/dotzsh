@@ -8,6 +8,7 @@ Command line editing:
 * `C-g P` - FZF-pick a git branch name to paste into commandline
 * `C-w` - Delete-backward the current word in the command line
 * `A-d` - Delete the current word at the command line
+* `A-e` - Edit the current command line in $EDITOR
 * `C-a` - Go to the beginning of the command line
 * `C-e` - Go to the end of the command line
 * `C-k` - Clear to the end of the command line
