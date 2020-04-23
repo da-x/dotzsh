@@ -546,7 +546,9 @@ function _narrow_to_region_marked()
     fi
 }
 zle -N _narrow_to_region_marked
-bindkey "^X"    _narrow_to_region_marked
+
+# C-Insert
+bindkey "^[[2;5~"    _narrow_to_region_marked
 
 LAST_EXIT_STATUS_COLLECTED=1
 
