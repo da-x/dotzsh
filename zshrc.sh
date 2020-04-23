@@ -472,8 +472,8 @@ bindkey "^Gd" my-zsh-git-diff
 bindkey "^G^D" my-zsh-git-diff
 bindkey "^Ge" my-zsh-edit-status-file
 bindkey "^G^E" my-zsh-edit-status-file
-bindkey "^Gg" my-zsh-edit-git-file
-bindkey "^G^G" my-zsh-edit-git-file
+bindkey "^Gf" my-zsh-edit-git-file
+bindkey "^G^F" my-zsh-edit-git-file
 bindkey "^Gh" my-zsh-edit-HEAD-file
 bindkey "^G^H" my-zsh-edit-HEAD-file
 bindkey "^Gq" my-zsh-edit-conflicted-file

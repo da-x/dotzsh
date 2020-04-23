@@ -38,6 +38,6 @@ Quick invocations (modifications):
 
 * `C-g q` - Pick one of the Git conflicts to edit.
 * `C-g e` - Open a list of Git files in status, and go edit one of them
-* `C-g g` - Open a list of Git files in FZF, and go edit one of them
+* `C-g f` - Open a list of Git files in FZF, and go edit one of them
 * `C-g h` - Open a list of Git files affected by the commit HEAD in FZF, and go edit one of them
 * `C-g c` - Do a 'Git checkout' to another branch
