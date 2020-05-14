@@ -265,6 +265,8 @@ no_histsavecwd="$?"
 #    https://github.com/da-x/zsh/tree/per-directory-history
 #
 
+export FZF_CTRL_R_OPTS='--exact'
+
 if [[ "$no_histsavecwd" == "1" ]] ; then
     setopt histsavecwd
     # CTRL-R - Paste the selected command from history into the command line
@@ -750,11 +752,8 @@ dotfiles () {
     esac
 }
 
-eoc-git() {
-    while [ true ] ; do
-        inotifywait -q -e modify -e create $(echo . ; git ls-files ; git list-untracked)
-        "$@"
-    done
+git-watch() {
+    rex wait-on -g . -c -- "$@"
 }
 
 function cd-to-backlink() {
