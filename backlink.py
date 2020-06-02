@@ -8,6 +8,8 @@ def main():
     rd = os.path.realpath(d)
     cwd = os.getcwd()
 
+    if not os.path.exists(d):
+        return
     for sym in os.listdir(d):
         sym_p = os.path.join(rd, sym)
         sym_rp = os.path.realpath(sym_p)
