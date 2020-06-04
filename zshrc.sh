@@ -600,6 +600,7 @@ set_prompt() {
 	    fi
 	fi
 	PS1+="%{$fg_bold[cyan]%}>%{$reset_color$fg[cyan]%}"
+	PS1+=$'\n'
     fi
 
     # Timer: http://stackoverflow.com/questions/2704635/is-there-a-way-to-find-the-running-time-of-the-last-executed-command-in-the-shel
