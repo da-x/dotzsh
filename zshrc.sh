@@ -6,6 +6,10 @@ SAVEHIST=100000
 HISTSIZE=100000
 HISTFILE=${ZSH_ROOT}/history
 
+# Timeout
+
+KEYTIMEOUT=200
+
 # Aliases
 
 alias -s c=vim
@@ -368,6 +372,26 @@ my-zsh-git-log() {
 }
 zle -N my-zsh-git-log
 
+my-zsh-CtrlG_j() {
+    nvim -c "call MyFZFDiffHunks('HEAD~1', 'full')"
+}
+zle -N my-zsh-CtrlG_j
+
+my-zsh-CtrlG_d() {
+    nvim -c "call MyFZFDiffHunks('', 'full')"
+}
+zle -N my-zsh-CtrlG_d
+
+my-zsh-CtrlG_D() {
+    nvim -c "call MyFZFDiffHunks('HEAD', 'full')"
+}
+zle -N my-zsh-CtrlG_D
+
+my-zsh-CtrlG_C() {
+    nvim -c "call MyFZFDiffHunks('--cached', 'full')"
+}
+zle -N my-zsh-CtrlG_C
+
 my-zsh-git-show() { git show }
 zle -N my-zsh-git-show
 
@@ -470,8 +494,9 @@ bindkey "^GR" emit-current-git-root-relative
 bindkey "^GT" emit-current-git-path-to-root
 bindkey "^Gc" my-zsh-git-checkout
 bindkey "^Gc" my-zsh-git-checkout
-bindkey "^Gd" my-zsh-git-diff
-bindkey "^G^D" my-zsh-git-diff
+bindkey "^Gd" my-zsh-CtrlG_d
+bindkey "^G^d" my-zsh-CtrlG_d
+bindkey "^GD" my-zsh-CtrlG_D
 bindkey "^Ge" my-zsh-edit-status-file
 bindkey "^G^E" my-zsh-edit-status-file
 bindkey "^Gf" my-zsh-edit-git-file
@@ -482,6 +507,8 @@ bindkey "^Gq" my-zsh-edit-conflicted-file
 bindkey "^G^q" my-zsh-edit-conflicted-file
 bindkey "^Gl" my-zsh-git-log
 bindkey "^G^L" my-zsh-git-log
+bindkey "^Gj" my-zsh-CtrlG_j
+bindkey "^G^j" my-zsh-CtrlG_j
 bindkey "^Gn" my-zsh-git-diff-cached
 bindkey "^G^N" my-zsh-git-diff-cached
 bindkey "^Gs" my-zsh-git-status
