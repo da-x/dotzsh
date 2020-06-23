@@ -464,7 +464,31 @@ zle -N my-zsh-cd-parent
 
 bindkey "^[ll" my-zsh-ls
 bindkey "^[l^[l" my-zsh-ls
+
+# C
+fzf-cd-tmux-paths() {
+  local cmd="tmux-paths"
+  setopt localoptions pipefail no_aliases 2> /dev/null
+  local dir="$(eval "$cmd" | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} --no-sort --reverse $FZF_DEFAULT_OPTS $FZF_ALT_C_OPTS" $(__fzfcmd) +m)"
+  if [[ -z "$dir" ]]; then
+    zle redisplay
+    return 0
+  fi
+  cd "$dir"
+  unset dir # ensure this doesn't end up appearing in prompt expansion
+  local ret=$?
+  zle fzf-redraw-prompt
+  return $ret
+}
+zle     -N    fzf-cd-tmux-paths
+
+# Ctrl-'
+bindkey '^[[5;30024~' fzf-cd-tmux-paths
+
+# C-\
 bindkey "^\\" fzf-cd-widget
+
+# Ctrl-backspace
 bindkey "^H" my-zsh-cd-parent
 bindkey "^]" fzf-file-widget
 bindkey -r "^[l"
