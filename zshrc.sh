@@ -646,8 +646,8 @@ set_prompt() {
 	PS1+=' '
 	PS1+="%{$fg_bold[cyan]%}<%{$reset_color$fg[cyan]%}$(git rev-parse --abbrev-ref HEAD 2>/dev/null)%{$reset_color%}"
 	if [ "$(git config core.prompt-disable)" != "true" ] ; then
-	    if [ $(git status --short | wc -l) -gt 0 ]; then
-		PS1+="%{$fg[red]%}+$(git status --short | wc -l | awk '{$1=$1};1')%{$reset_color%}"
+	    if [ $(git -c core.checkStat=minimal status --short | wc -l) -gt -1 ]; then
+		PS1+="%{$fg[red]%}+$(git -c core.checkStat=minimal status --short | wc -l | awk '{$1=$1};1')%{$reset_color%}"
 	    fi
 	fi
 	PS1+="%{$fg_bold[cyan]%}>%{$reset_color$fg[cyan]%}"
