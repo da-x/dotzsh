@@ -387,10 +387,10 @@ my-zsh-CtrlG_D() {
 }
 zle -N my-zsh-CtrlG_D
 
-my-zsh-CtrlG_C() {
+my-zsh-DiffHunksCached() {
     nvim -c "call MyFZFDiffHunks('--cached', 'full')"
 }
-zle -N my-zsh-CtrlG_C
+zle -N my-zsh-DiffHunksCached
 
 my-zsh-git-show() { git show }
 zle -N my-zsh-git-show
@@ -516,7 +516,6 @@ bindkey "^GH" emit-current-git-hash
 bindkey "^GP" emit-picked-git-branch-name
 bindkey "^GR" emit-current-git-root-relative
 bindkey "^GT" emit-current-git-path-to-root
-bindkey "^Gc" my-zsh-git-checkout
 bindkey "^Gc" my-zsh-git-checkout
 bindkey "^Gd" my-zsh-CtrlG_d
 bindkey "^G^d" my-zsh-CtrlG_d
