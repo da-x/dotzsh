@@ -97,11 +97,11 @@ alias a='cat ${ZSH_ROOT}/zshrc.sh | grep ^alias | sort'
 which nvim 2>/dev/null >/dev/null
 if [[ "$?" == "0" ]] ; then
     alias v='nvim'
-    EDITOR="nvim"
+    export EDITOR="nvim"
     VISUAL="nvim"
 else
     alias v='vim'
-    EDITOR="vim"
+    export EDITOR="vim"
     VISUAL="vim"
 fi
 
@@ -378,7 +378,7 @@ my-zsh-CtrlG_j() {
 zle -N my-zsh-CtrlG_j
 
 my-zsh-CtrlG_d() {
-    nvim -c "call MyFZFDiffHunks('', 'full')"
+    git-fzf-diff
 }
 zle -N my-zsh-CtrlG_d
 
