@@ -174,7 +174,7 @@ GREP_COLORS='ms=38;5;47;1:mc=01;34:sl=:cx=:fn=38;5;117:ln=38;5;32:bn=31:se=38;5;
 which fancydiff 2>/dev/null >/dev/null
 if [[ "$?" == "0" ]] ; then
     LESS='-R'
-    LESSOPEN="|fancydiff file %s -e"
+    # LESSOPEN="|fancydiff file %s -e"
 fi
 
 # Terminal setup
