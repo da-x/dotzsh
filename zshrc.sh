@@ -448,13 +448,14 @@ my-zsh-edit-HEAD-file() {
 }
 zle -N my-zsh-edit-HEAD-file
 
-my-zsh-edit-conflicted-file() {
+my-zsh-CtrlG_q() {
+    # Edit conflicted files
     local picked=$(git diff --name-only --diff-filter=U | fzf -m -1 -0)
     if [[ "$picked" != "" ]] ; then
-	${EDITOR} $(echo ${picked})
+	${EDITOR} $(git rev-parse --show-toplevel)/${picked}
     fi
 }
-zle -N my-zsh-edit-conflicted-file
+zle -N my-zsh-CtrlG_q
 
 my-zsh-cd-parent() {
     cd ..
@@ -526,8 +527,8 @@ bindkey "^Gf" my-zsh-edit-git-file
 bindkey "^G^F" my-zsh-edit-git-file
 bindkey "^Gh" my-zsh-edit-HEAD-file
 bindkey "^G^H" my-zsh-edit-HEAD-file
-bindkey "^Gq" my-zsh-edit-conflicted-file
-bindkey "^G^q" my-zsh-edit-conflicted-file
+bindkey "^Gq" my-zsh-CtrlG_q
+bindkey "^G^q" my-zsh-CtrlG_q
 bindkey "^Gl" my-zsh-git-log
 bindkey "^G^L" my-zsh-git-log
 bindkey "^Gj" my-zsh-CtrlG_j
