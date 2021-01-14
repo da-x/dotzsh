@@ -87,6 +87,9 @@ alias gsh='git show'
 alias gti='git'
 alias gtb='git tracking-branch'
 alias gts='git ctags'
+alias gws='git-wtb-switch'
+alias gwr='git-wtb-rename'
+alias gwl='git worktree list'
 
 alias gre='grep'
 alias gepr='grep'
@@ -806,6 +809,51 @@ dotfiles () {
 
 git-watch() {
     rex wait-on -g . -c -- "$@"
+}
+
+git-wtb-rename() {
+    # Rename current Git branch *and* git worktree directory basename, plus
+    # change to the moved worktree directory.
+    newname=${1}
+    if [[ ${newname} == "" ]] ; then
+	return
+    fi
+    while read dir details ; do
+	if [[ "${dir}" == "$(pwd)" ]] ; then
+	    local branch=$(echo ${details} | awk -F'[\\]\\[]' '{print $2}')
+	    local last=$(basename ${dir})
+	    if [[ "${branch}" == "${last}" ]] ; then
+		if [[ -d ${newdirname} ]] ; then
+		    echo Already exists
+		    break
+		fi
+		newdirname=$(dirname ${dir})/${newname}
+		git worktree move ${dir} ${newdirname}
+		git branch -M ${last} ${newname}
+		cd ${newdirname}
+	    fi
+	    break
+	fi
+    done < <(git worktree list)
+}
+
+git-wtb-switch() {
+    # Switch to a worktree's directory, based on its branch name
+    local name=${1}
+    if [[ ${name} == "" ]] ; then
+	return
+    fi
+    while read dir details ; do
+	local branch=$(echo ${details} | awk -F'[\\]\\[]' '{print $2}')
+	if [[ "${branch}" == "${name}" ]] ; then
+	    if [[ ! -d ${dir} ]] ; then
+		echo Worktree does not exist
+		break
+	    fi
+	    cd ${dir}
+	    break
+	fi
+    done < <(git worktree list)
 }
 
 function cd-to-backlink() {
