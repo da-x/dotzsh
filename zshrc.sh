@@ -87,6 +87,7 @@ alias gsh='git show'
 alias gti='git'
 alias gtb='git tracking-branch'
 alias gts='git ctags'
+alias gwd='git-wtb-remove'
 alias gws='git-wtb-switch'
 alias gwr='git-wtb-rename'
 alias gwl='git worktree list'
@@ -363,9 +364,7 @@ emit-picked-git-branch-name() {
 zle -N emit-picked-git-branch-name
 
 my-zsh-git-checkout() {
-    BUFFER=""
-    echo
-    zle -M "$(git checkout $(git-mru-branch | fzf))"
+    git-wtb-switch $(git-mru-branch | fzf)
     zle accept-line
 }
 zle -N my-zsh-git-checkout
@@ -837,24 +836,109 @@ git-wtb-rename() {
     done < <(git worktree list)
 }
 
+git-wtb-remove() {
+    local name=""
+    local force=0
+    local removeparams=""
+
+    while [[ $# != 0 ]] ; do
+	if [[ "$1" == "-f" ]] ; then
+	    removeparams="-f"
+	    force=1
+	    shift
+	    continue
+	fi
+	if [[ "$name" != " " ]] ; then
+	    echo "Name already specified"
+	    return 1
+	fi
+	name="$1"
+	break
+    done
+
+    if [[ ${name} == "" ]] ; then
+	name=$(git branch --show-current)
+    fi
+
+    if [[ ${name} == "" ]] ; then
+	echo "No current branch name"
+	return 1
+    fi
+
+    local maintree=""
+    local mainbranch=""
+    while read dir details ; do
+	local branch=$(echo ${details} | awk -F'[\\]\\[]' '{print $2}')
+	if [[ "$maintree" == "" ]]; then
+	    maintree=$dir
+	    mainbranch=$branch
+	fi
+	if [[ "${branch}" == "${name}" ]] ; then
+	    git worktree remove ${removeparams} ${dir}
+	    if [[ "$?" == "0" ]] ; then
+		cd ${maintree}
+	    else
+		return 1
+	    fi
+	    return
+	fi
+    done < <(git worktree list)
+}
+
 git-wtb-switch() {
     # Switch to a worktree's directory, based on its branch name
     local name=${1}
     if [[ ${name} == "" ]] ; then
 	return
     fi
+    local maintree=""
+    local mainbranch=""
     while read dir details ; do
 	local branch=$(echo ${details} | awk -F'[\\]\\[]' '{print $2}')
+	if [[ "$maintree" == "" ]]; then
+	    maintree=$dir
+	    mainbranch=$branch
+	fi
 	if [[ "${branch}" == "${name}" ]] ; then
 	    if [[ ! -d ${dir} ]] ; then
-		echo Worktree does not exist
-		break
+		echo Worktree missing, recreating
+		git worktree remove ${dir}
+		git worktree add ${dir} ${branch}
 	    fi
 	    cd ${dir}
-	    break
+	    return
 	fi
     done < <(git worktree list)
+
+    if [[ "$mainbranch" == "$branch" ]] && [[ "$mainbranch" == "$name" ]] ; then
+	return 0
+    fi
+
+    if [[ "$(pwd)" != "${maintree}" ]] ; then
+	cd ${maintree}
+    fi
+
+    git checkout ${name}
 }
+
+envix_path=$(which envix 2>/dev/null)
+if [[ "${envix_path}" != "" ]] then
+    envix_prev_pwd="/"
+
+    function envio_refresh_context() {
+	${envix_path} --previous "${envix_prev_pwd}" --current ${PWD} | source /dev/stdin
+	envix_prev_pwd=${PWD}
+    }
+
+    envio_refresh_context
+    case $- in
+       *i*)
+	  autoload -U add-zsh-hook
+ 	  add-zsh-hook chpwd envio_refresh_context
+ 	  ;;
+       *) ;;
+    esac
+fi
 
 function cd-to-backlink() {
     $(python2 ${ZSH_ROOT}/backlink.py)
