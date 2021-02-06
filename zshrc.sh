@@ -603,6 +603,20 @@ zle -N _narrow_to_region_marked
 # C-Insert
 bindkey "^[[2;5~"    _narrow_to_region_marked
 
+which envix 2>/dev/null >/dev/null
+if [[ "$?" == "0" ]] ; then
+    PREV_PWD=""
+
+    envix_chpwd_hook() {
+	envix --previous "${PREV_PWD}" --current "$PWD" | source /dev/stdin
+	PREV_PWD=${PWD}
+    }
+
+    autoload add-zsh-hook
+    add-zsh-hook chpwd envix_chpwd_hook
+fi
+
+
 LAST_EXIT_STATUS_COLLECTED=1
 
 function notify_unfocused_termination() {
