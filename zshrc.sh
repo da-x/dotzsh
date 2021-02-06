@@ -605,6 +605,29 @@ bindkey "^[[2;5~"    _narrow_to_region_marked
 
 LAST_EXIT_STATUS_COLLECTED=1
 
+function notify_unfocused_termination() {
+    local elapsed=$1
+    local exitcode=$2
+
+    if [ ! -n "$TMUX" ]; then
+	return
+    fi
+
+    # local _executed=$(fc -l -1 | awk '{$1=""}1')
+    local session_name=$(tmux display-message -p '#S')
+
+    tmux list-clients -t ${session_name} -F '#{client_flags}' | grep ',focused' > /dev/null
+
+    if [[ "$?" = "0" ]] ; then
+	# Focused
+	return
+    fi
+
+    local logfile=${XDG_RUNTIME_DIR}/unfocused-terminations.log
+    mkdir -p ${XDG_RUNTIME_DIR}
+    echo $(date +%s) ${session_name} ${exitcode} >> ${logfile}
+}
+
 set_prompt() {
     local LAST_EXIT_CODE=$?
     local dh=`print -n "%{\033[1;38;2;0;127;127m%}"`
@@ -634,13 +657,6 @@ set_prompt() {
 
     PS1+="${dh}%D{%H:%M}%{$reset_color%}"
 
-    if [[ "${_notify_activated}" == "1" ]] ; then
-	PS1+=" %{$fg_bold[white]%}["
-	PS1+="%{$fg_bold[magenta]%}NOTIF"
-	PS1+="%{$fg_bold[white]%}]"
-	PS1+="%{$reset_color%}"
-    fi
-
     # Git status
     if git rev-parse --is-inside-work-tree 2> /dev/null | grep -q 'true' ; then
 	PS1+=' '
@@ -656,20 +672,7 @@ set_prompt() {
 
     # Timer: http://stackoverflow.com/questions/2704635/is-there-a-way-to-find-the-running-time-of-the-last-executed-command-in-the-shel
     if [[ $_elapsed[-1] -ne 0 ]]; then
-	if [[ "${_notify_activated}" == "1" ]] ; then
-	    _executed=$(fc -l -1 | awk '{$1=""}1')
-
-	    local _desktop_now=$(xdotool get_desktop)
-
-	    if [[ "$_desktop_now" != "$_desktop_at_preexec" ]] ; then
-		if [[ "$LAST_EXIT_CODE" != "0" ]] ; then
-		    xnotify -b '#700000' "Error[$LAST_EXIT_CODE]:${_executed}" &|
-		else
-		    xnotify -b '#007000' "Success:${_executed}" &|
-		fi
-	    fi
-	fi
-
+	notify_unfocused_termination $_elapsed[-1] $LAST_EXIT_CODE
 	PS1+=' '
 	PS1+="%{$fg[magenta]%}$_elapsed[-1]%{$reset_color%}"
 	_elapsed=(0)
@@ -781,14 +784,6 @@ fi
 
 reload () {
     exec zsh
-}
-
-notify-activate () {
-    export _notify_activated=1
-}
-
-notify-deactivate () {
-    export _notify_activated=0
 }
 
 dotfiles () {
