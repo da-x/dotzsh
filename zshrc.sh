@@ -1,10 +1,15 @@
 ZSH_ROOT=$(dirname $0)
 
-# History
+# Oh-my-zsh and plugins activation
 
-SAVEHIST=100000
-HISTSIZE=100000
-HISTFILE=${ZSH_ROOT}/history
+plugins=()
+ZSH=${ZSH_ROOT}/oh-my-zsh
+DISABLE_AUTO_UPDATE=true
+CASE_SENSITIVE=true
+source ${ZSH_ROOT}/oh-my-zsh/oh-my-zsh.sh
+source ${ZSH_ROOT}/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source ${ZSH_ROOT}/zsh-titles/titles.plugin.zsh
+unset DISABLE_AUTO_UPDATE
 
 # Timeout
 
@@ -17,10 +22,14 @@ alias -s h=vim
 alias -s toml=vim
 alias -s md=vim
 
-alias g='git'
 alias mv='mv -v'
 alias cdl='cd ~/var/downloads'
 alias clr='clear'
+
+alias g='git'
+alias d='dirs -v | head -20'
+alias h='cd ~'
+alias a='cat ${ZSH_ROOT}/zshrc.sh | grep ^alias | sort'
 
 alias ga='git add'
 alias gamd='git amd'
@@ -92,11 +101,26 @@ alias gws='git-wtb-switch'
 alias gwr='git-wtb-rename'
 alias gwl='git worktree list'
 
-alias gre='grep'
-alias gepr='grep'
-alias gerp='grep'
+alias v-gls='v $(git ls-files ; git list-untracked)'
+alias fm='exo-open --launch FileManager'
+alias pfe='pty-for-each'
+alias pfes="pfe single '' --"
+alias rgsl='rg --sort-files --color always'
+alias rex1='rex wait-on 1 -- '
+alias rex2='rex wait-on 2 -- '
+alias rex3='rex wait-on 3 -- '
 
-alias a='cat ${ZSH_ROOT}/zshrc.sh | grep ^alias | sort'
+which lsd 2>/dev/null >/dev/null
+if [[ "$?" == "0" ]] ; then
+    alias ll='lsd -l'
+else
+    which exa 2>/dev/null >/dev/null
+    if [[ "$?" == "0" ]] ; then
+	alias ll='exa -l'
+    fi
+fi
+
+# Editor
 
 which nvim 2>/dev/null >/dev/null
 if [[ "$?" == "0" ]] ; then
@@ -109,34 +133,22 @@ else
     VISUAL="vim"
 fi
 
-vgg() {
-    v -c "Gg $@"
-}
+# Invoke vim Gg directly from command line
 
-alias v-gls='v $(git ls-files ; git list-untracked)'
-alias h='cd ~'
-alias fm='exo-open --launch FileManager'
-alias pfe='pty-for-each'
-alias pfes="pfe single '' --"
-alias rgsl='rg --sort-files --color always'
+vgg() { v -c "Gg $@" }
 
-get-bgc() {
-    v=$(tmux select-pane -g | grep 'bg=#' | awk -F'bg=#' '{print $2}')
-}
-
-alias rex1='rex wait-on 1 -- '
-alias rex2='rex wait-on 2 -- '
-alias rex3='rex wait-on 3 -- '
-
-bgc() {
-    tmux select-pane -P "bg=#$1"
-}
-
-help() {
-    less ${ZSH_ROOT}/README.md
-}
+# Tmux pane background color
 
 if [ -n "$TMUX" ]; then
+    get-bgc() {
+	v=$(tmux select-pane -g | grep 'bg=#' | awk -F'bg=#' '{print $2}')
+    }
+
+    bgc() {
+	tmux select-pane -P "bg=#$1"
+    }
+
+    # When running sudo, change background to red
     sudo() {
 	oldbgc=$(get-bgc)
 	if [[ $oldbgc == '' ]] ; then
@@ -161,9 +173,11 @@ else
     alias bring='sudo apt-get install'
 fi
 
-# Typos
+# Frequent typos
 
 alias gerp='grep'
+alias gre='grep'
+alias gepr='grep'
 alias rload='reload'
 alias rloa='reload'
 alias dc='cd'
@@ -175,13 +189,10 @@ alias psfa='psf -fe'
 
 GREP_COLORS='ms=38;5;47;1:mc=01;34:sl=:cx=:fn=38;5;117:ln=38;5;32:bn=31:se=38;5;50;1'
 
-which fancydiff 2>/dev/null >/dev/null
-if [[ "$?" == "0" ]] ; then
-    LESS='-R'
-    # LESSOPEN="|fancydiff file %s -e"
-fi
-
 # Terminal setup
+
+my-noop-func() { }
+zle -N my-noop-func
 
 stty -ixon
 stty stop undef
@@ -191,9 +202,6 @@ bindkey "^[[5;30001~" accept-line
 bindkey "^[[5;30002~" accept-line
 bindkey "^[[5;30003~" accept-line
 bindkey "^[[5;30005~" accept-line
-
-my-noop-func() {}
-zle -N my-noop-func
 
 bindkey "^[[5;30014~" my-noop-func
 bindkey "^[[1;3A" my-noop-func
@@ -232,26 +240,11 @@ autoload -U colors && colors
 setopt auto_cd
 setopt multios
 
-# External stuff
+# History
 
-DISABLE_AUTO_UPDATE=true
-CASE_SENSITIVE=true
-
-# Oh-my-zsh and plugins activation
-
-plugins=()
-ZSH=${ZSH_ROOT}/oh-my-zsh
-source ${ZSH_ROOT}/oh-my-zsh/oh-my-zsh.sh
-# source ${ZSH_ROOT}/oh-my-zsh/lib/history.zsh
-# source ${ZSH_ROOT}/oh-my-zsh/lib/key-bindings.zsh
-# source ${ZSH_ROOT}/oh-my-zsh/lib/completion.zsh
-source ${ZSH_ROOT}/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-
-alias d='dirs -v | head -20'
-
-unset DISABLE_AUTO_UPDATE
-
-# History, part #2
+SAVEHIST=100000
+HISTSIZE=100000
+HISTFILE=${ZSH_ROOT}/history
 
 setopt no_inc_append_history
 setopt histignoredups
@@ -259,11 +252,12 @@ setopt histignorealldups
 setopt histignorespace
 setopt histfindnodups
 setopt extended_history
-setopt share_history
 setopt hist_verify
+setopt inc_append_history
 setopt histsavecwd 2>&1 | grep -q "no such option"
-
 no_histsavecwd="$?"
+
+unsetopt share_history
 
 #
 # Per-directory history
@@ -605,20 +599,6 @@ zle -N _narrow_to_region_marked
 # C-Insert
 bindkey "^[[2;5~"    _narrow_to_region_marked
 
-which envix 2>/dev/null >/dev/null
-if [[ "$?" == "0" ]] ; then
-    PREV_PWD=""
-
-    envix_chpwd_hook() {
-	envix --previous "${PREV_PWD}" --current "$PWD" | source /dev/stdin
-	PREV_PWD=${PWD}
-    }
-
-    autoload add-zsh-hook
-    add-zsh-hook chpwd envix_chpwd_hook
-fi
-
-
 LAST_EXIT_STATUS_COLLECTED=1
 
 function notify_unfocused_termination() {
@@ -930,12 +910,14 @@ git-wtb-switch() {
     git checkout ${name}
 }
 
+# Envix overrides
+
 envix_path=$(which envix 2>/dev/null)
 if [[ "${envix_path}" != "" ]] then
     envix_prev_pwd="/"
 
     function envio_refresh_context() {
-	${envix_path} --previous "${envix_prev_pwd}" --current ${PWD} | source /dev/stdin
+	${envix_path} --previous "$(realpath ${envix_prev_pwd})" --current $(realpath ${PWD}) | source /dev/stdin
 	envix_prev_pwd=${PWD}
     }
 
@@ -949,22 +931,33 @@ if [[ "${envix_path}" != "" ]] then
     esac
 fi
 
-function cd-to-backlink() {
-    $(python2 ${ZSH_ROOT}/backlink.py)
-}
+if [[ "$_is_interactive" == "1" ]] ; then
+    declare -A backlinks
+    backlinks_nested=0
+    # Setup backlinks
 
-source ${ZSH_ROOT}/zsh-titles/titles.plugin.zsh
+    function loadback_links() {
+	for i in $(find ~ -maxdepth 1 -type l | grep -v "${HOME}/[.]") ; do
+	    local link=$(readlink ${i})
+	    backlinks["${HOME}/$link"]=${i}
+	done
+    }
 
-which lsd 2>/dev/null >/dev/null
-if [[ "$?" == "0" ]] ; then
-    alias ll='lsd -l'
-else
-    which exa 2>/dev/null >/dev/null
-    if [[ "$?" == "0" ]] ; then
-	alias ll='exa -l'
-    fi
+    function __check_backlink() {
+	if [[ "${backlinks_nested}" == "1" ]] ; then
+	    return
+	fi
+
+	local dest=${backlinks["${PWD}"]}
+	if [[ "${dest}" != "" ]] && [[ -d ${dest} ]]; then
+	    backlinks_nested=1
+	    cd ${dest}
+	    backlinks_nested=0
+	fi
+    }
+
+    loadback_links
+    unset -f loadback_links
+    autoload -U add-zsh-hook
+    add-zsh-hook chpwd __check_backlink
 fi
-
-cd-to-backlink
-unsetopt share_history
-setopt inc_append_history
