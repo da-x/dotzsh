@@ -609,19 +609,34 @@ function notify_unfocused_termination() {
 	return
     fi
 
-    # local _executed=$(fc -l -1 | awk '{$1=""}1')
+    # Name of the session for which this shell belongs
     local session_name=$(tmux display-message -p '#S')
 
+    # Is this session focused on any client?
     tmux list-clients -t ${session_name} -F '#{client_flags}' | grep ',focused' > /dev/null
 
     if [[ "$?" = "0" ]] ; then
-	# Focused
-	return
+	# Session is in focus, but we may be focused in another window.
+
+	# Tmux window ID of the pane in which the shell is executing.
+	local pane_win=$(tmux list-panes -as -F '#{window_id}' -f "#{==:#{pane_id},"${TMUX_PANE}"}")
+
+	# Tmux window ID of the currently focused window in the session.
+	local focus_win=$(tmux list-windows -F '#{window_id}' -f '#{window_active}' -t ${session_name})
+
+	if [[ ${pane_win} == ${focus_win} ]] ; then
+	    # Focused
+	    return
+	fi
     fi
 
+    local lockfile=${XDG_RUNTIME_DIR}/unfocused-terminations.lock
     local logfile=${XDG_RUNTIME_DIR}/unfocused-terminations.log
-    mkdir -p ${XDG_RUNTIME_DIR}
-    echo $(date +%s) ${session_name} ${exitcode} >> ${logfile}
+    local name=$(tmux list-panes -as -F '#{window_name}' -f "#{==:#{pane_id},"${TMUX_PANE}"}")
+    local index=$(tmux list-panes -as -F '#{window_index}' -f "#{==:#{pane_id},"${TMUX_PANE}"}")
+    echo "$(date +%s),${session_name},${index},${name},${TMUX_PANE},${exitcode}" >> ${logfile}.$$
+    flock ${lockfile} bash -c "cat ${logfile}.$$ >> ${logfile}"
+    rm -f ${logfile}.$$
 }
 
 set_prompt() {
