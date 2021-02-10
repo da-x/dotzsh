@@ -244,7 +244,7 @@ setopt multios
 
 SAVEHIST=100000
 HISTSIZE=100000
-HISTFILE=${ZSH_ROOT}/history
+export HISTFILE=${ZSH_ROOT}/history
 
 setopt no_inc_append_history
 setopt histignoredups
@@ -940,6 +940,37 @@ if [[ "${envix_path}" != "" ]] then
  	  ;;
        *) ;;
     esac
+fi
+
+# Setup superhist
+#------------------------------------------------------------------------------------------
+
+if [[ -e ${ZSH_ROOT}/superhist/bin/superhist ]] ; then
+    superhist_idx=0
+    superhist_term_id=$(tty)
+
+    function _superhist-addhistory() {
+	unset _SUPERHIST_RETVAL
+	if [[ "$@" == "" ]]; then
+	    true
+	else
+	    ${ZSH_ROOT}/superhist/bin/superhist add \
+		-i ${superhist_idx} \
+		-t ${superhist_term_id} \
+		-x $(date +%s) \
+		-w $PWD \
+		-c "$@"
+	    superhist_idx=$(($superhist_idx + 1))
+	fi
+    }
+
+    function _superhist-precmd() {
+	export _SUPERHIST_RETVAL="${?}"
+    }
+
+    autoload -U add-zsh-hook
+    add-zsh-hook zshaddhistory _superhist-addhistory
+    add-zsh-hook precmd _superhist-precmd
 fi
 
 # Setup backlinks
