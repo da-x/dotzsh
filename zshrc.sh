@@ -743,55 +743,47 @@ set_prompt() {
 
 precmd_functions+=set_prompt
 
-case $- in
-  *i*) _is_interactive=1 ;;
-  *) _is_interactive=0 ;;
-esac
+if [ -n "$TMUX" ]; then
+    function tmux-refresh {
+	for i in $(tmux show-environment | grep -v "^-") ; do 
+	    export $i
+	done
+	tmux show-environment | grep "^-XAUTHORITY" > /dev/null
+	if [[ $? == 0 ]] ; then
+	    unset XAUTHORITY
+	fi
+	_last_tmux_refresh=$SECONDS
+    }
 
-if [[ "$_is_interactive" == "1" ]] ; then
-    if [ -n "$TMUX" ]; then
-	function tmux-refresh {
-	    for i in $(tmux show-environment | grep -v "^-") ; do 
-		export $i
-	    done
-	    tmux show-environment | grep "^-XAUTHORITY" > /dev/null
-	    if [[ $? == 0 ]] ; then
-		unset XAUTHORITY
-	    fi
-	    _last_tmux_refresh=$SECONDS
-	}
-
-	function tmux-check-refresh {
-	    if [[ $(( SECONDS-_last_tmux_refresh >= 3)) == 1 ]] ; then
-		tmux-refresh
-	    fi
-	}
-    else
-	function tmux-refresh { }
-
-	function tmux-check-refresh {
-	}
-    fi
-
-    preexec () {
-	LAST_EXIT_STATUS_COLLECTED=0
-	(( ${#_elapsed[@]} > 1000 )) && _elapsed=(${_elapsed[@]: -1000})
-	_start=$SECONDS
-
-	tmux-check-refresh
-
-	if [[ "${_notify_activated}" == "1" ]] ; then
-	    _desktop_at_preexec=$(xdotool get_desktop)
+    function tmux-check-refresh {
+	if [[ $(( SECONDS-_last_tmux_refresh >= 3)) == 1 ]] ; then
+	    tmux-refresh
 	fi
     }
+else
+    function tmux-refresh { }
 
-    tmux-refresh
-
-    precmd () {
-	(( _start >= 0 )) && _elapsed+=($(( SECONDS-_start )))
-	_start=-1
-    }
+    function tmux-check-refresh { }
 fi
+
+preexec () {
+    LAST_EXIT_STATUS_COLLECTED=0
+    (( ${#_elapsed[@]} > 1000 )) && _elapsed=(${_elapsed[@]: -1000})
+    _start=$SECONDS
+
+    tmux-check-refresh
+
+    if [[ "${_notify_activated}" == "1" ]] ; then
+	_desktop_at_preexec=$(xdotool get_desktop)
+    fi
+}
+
+tmux-refresh
+
+precmd () {
+    (( _start >= 0 )) && _elapsed+=($(( SECONDS-_start )))
+    _start=-1
+}
 
 reload () {
     exec zsh
@@ -813,6 +805,9 @@ dotfiles () {
 git-watch() {
     rex wait-on -g . -c -- "$@"
 }
+
+# Git worktree+branches handy commands
+#------------------------------------------------------------------------------------------
 
 git-wtb-rename() {
     # Rename current Git branch *and* git worktree directory basename, plus
@@ -926,6 +921,7 @@ git-wtb-switch() {
 }
 
 # Envix overrides
+#------------------------------------------------------------------------------------------
 
 envix_path=$(which envix 2>/dev/null)
 if [[ "${envix_path}" != "" ]] then
@@ -946,33 +942,33 @@ if [[ "${envix_path}" != "" ]] then
     esac
 fi
 
-if [[ "$_is_interactive" == "1" ]] ; then
-    declare -A backlinks
-    backlinks_nested=0
-    # Setup backlinks
+# Setup backlinks
+#------------------------------------------------------------------------------------------
 
-    function loadback_links() {
-	for i in $(find ~ -maxdepth 1 -type l | grep -v "${HOME}/[.]") ; do
-	    local link=$(readlink ${i})
-	    backlinks["${HOME}/$link"]=${i}
-	done
-    }
+declare -A backlinks
+backlinks_nested=0
 
-    function __check_backlink() {
-	if [[ "${backlinks_nested}" == "1" ]] ; then
-	    return
-	fi
+function loadback_links() {
+    for i in $(find ~ -maxdepth 1 -type l | grep -v "${HOME}/[.]") ; do
+	local link=$(readlink ${i})
+	backlinks["${HOME}/$link"]=${i}
+    done
+}
 
-	local dest=${backlinks["${PWD}"]}
-	if [[ "${dest}" != "" ]] && [[ -d ${dest} ]]; then
-	    backlinks_nested=1
-	    cd ${dest}
-	    backlinks_nested=0
-	fi
-    }
+function __check_backlink() {
+    if [[ "${backlinks_nested}" == "1" ]] ; then
+	return
+    fi
 
-    loadback_links
-    unset -f loadback_links
-    autoload -U add-zsh-hook
-    add-zsh-hook chpwd __check_backlink
-fi
+    local dest=${backlinks["${PWD}"]}
+    if [[ "${dest}" != "" ]] && [[ -d ${dest} ]]; then
+	backlinks_nested=1
+	cd ${dest}
+	backlinks_nested=0
+    fi
+}
+
+loadback_links
+unset -f loadback_links
+autoload -U add-zsh-hook
+add-zsh-hook chpwd __check_backlink
