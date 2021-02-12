@@ -269,19 +269,86 @@ unsetopt share_history
 
 export FZF_CTRL_R_OPTS='--exact'
 
+# Setup superhist
+#------------------------------------------------------------------------------------------
+
+function _fc_per_directory_history() { fc -crl 1 }
+function _fc_per_directory_history_fetch() { zle vi-fetch-history -n $1 }
+function _fc_history() { fc -rl 1 }
+function _fc_history_fetch() { zle vi-fetch-history -n $1 }
+function _fc_retrive() { fc -rl 1 }
+
+if [[ -e ${ZSH_ROOT}/superhist/bin/superhist ]] ; then
+    SAVEHIST=1000
+    HISTSIZE=1000
+
+    _superhist_idx=0
+    _superhist_term_id=$(tty)
+
+    function _superhist-addhistory() {
+	local cmd=$(echo $@ | tr '\n' ' ')
+	if [[ "${cmd}" =~ '^(\s)*$' ]]; then
+	    true
+	else
+	    _superhist_command=y
+	    _superhist_idx=$(($_superhist_idx + 1))
+	    ${ZSH_ROOT}/superhist/bin/superhist add \
+		-i ${_superhist_idx} \
+		-t ${_superhist_term_id} \
+		-x $(date +%s) \
+		-w $PWD \
+		-c "$@"
+	fi
+    }
+
+    function _superhist-precmd() {
+	local _superhist_exitcode=${?}
+	if [[ "$_superhist_command" == "y" ]] ; then
+	    unset _superhist_command
+	    ${ZSH_ROOT}/superhist/bin/superhist add \
+		-i ${_superhist_idx} \
+		-t ${_superhist_term_id} \
+		-x $(date +%s) \
+		-e "${_superhist_exitcode}"
+	fi
+    }
+
+    function _fc_per_directory_history() {
+	${ZSH_ROOT}/superhist/bin/superhist fc -s 1 -w $(realpath $PWD)
+    }
+
+    function _fc_history() {
+	${ZSH_ROOT}/superhist/bin/superhist fc -s 1
+    }
+
+    function _fc_per_directory_history_fetch() {
+	BUFFER=$(${ZSH_ROOT}/superhist/bin/superhist fc -s 1 -w $(realpath $PWD) -f $1)
+	zle end-of-line
+    }
+
+    function _fc_history_fetch() {
+	BUFFER=$(${ZSH_ROOT}/superhist/bin/superhist fc -s 1 -f $1)
+	zle end-of-line
+    }
+
+    autoload -U add-zsh-hook
+    add-zsh-hook zshaddhistory _superhist-addhistory
+    add-zsh-hook precmd _superhist-precmd
+fi
+
 if [[ "$no_histsavecwd" == "1" ]] ; then
     setopt histsavecwd
     # CTRL-R - Paste the selected command from history into the command line
     fzf-per-directory-history-widget() {
       local selected num
       setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
-      selected=( $(fc -crl 1 |
-	FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS -n2..,.. --tiebreak=index --bind=ctrl-r:toggle-sort $FZF_CTRL_R_OPTS --query=${(qqq)LBUFFER} +m" $(__fzfcmd)) )
+      selected=( $(_fc_per_directory_history |
+	FZF_DEFAULT_OPTS="--ansi --height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS -n2..,.. --tiebreak=index --bind=ctrl-r:toggle-sort $FZF_CTRL_R_OPTS --query=${(qqq)LBUFFER} +m" $(__fzfcmd)) )
       local ret=$?
       if [ -n "$selected" ]; then
 	num=$selected[1]
 	if [ -n "$num" ]; then
-	  zle vi-fetch-history -n $num
+	  _fc_per_directory_history_fetch $num
 	fi
       fi
       zle reset-prompt
@@ -293,6 +360,26 @@ if [[ "$no_histsavecwd" == "1" ]] ; then
     bindkey '^Nh' fzf-per-directory-history-widget
     bindkey '^N^H' fzf-per-directory-history-widget
 fi
+
+# CTRL-R - Paste the selected command from history into the command line
+fzf-super-history-widget() {
+    local selected num
+    setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
+    selected=( $(_fc_history |
+      FZF_DEFAULT_OPTS="--ansi --height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS -n2..,.. --tiebreak=index --bind=ctrl-r:toggle-sort $FZF_CTRL_R_OPTS --query=${(qqq)LBUFFER} +m" $(__fzfcmd)) )
+    local ret=$?
+    if [ -n "$selected" ]; then
+      num=$selected[1]
+      if [ -n "$num" ]; then
+        _fc_history_fetch $num
+      fi
+    fi
+    zle reset-prompt
+    return $ret
+}
+
+zle     -N   fzf-super-history-widget
+bindkey '^R' fzf-super-history-widget
 
 up-line-or-local-history() {
     zle set-local-history 1
@@ -307,8 +394,6 @@ down-line-or-local-history() {
 }
 zle -N down-line-or-local-history
 
-bindkey '^R' history-incremental-pattern-search-backward
-bindkey '^F' history-incremental-pattern-search-forward
 bindkey "^[[A" up-line-or-local-history
 bindkey "^[[B" down-line-or-local-history
 bindkey "^[[1;5A" up-line-or-history
@@ -940,37 +1025,6 @@ if [[ "${envix_path}" != "" ]] then
  	  ;;
        *) ;;
     esac
-fi
-
-# Setup superhist
-#------------------------------------------------------------------------------------------
-
-if [[ -e ${ZSH_ROOT}/superhist/bin/superhist ]] ; then
-    superhist_idx=0
-    superhist_term_id=$(tty)
-
-    function _superhist-addhistory() {
-	unset _SUPERHIST_RETVAL
-	if [[ "$@" == "" ]]; then
-	    true
-	else
-	    ${ZSH_ROOT}/superhist/bin/superhist add \
-		-i ${superhist_idx} \
-		-t ${superhist_term_id} \
-		-x $(date +%s) \
-		-w $PWD \
-		-c "$@"
-	    superhist_idx=$(($superhist_idx + 1))
-	fi
-    }
-
-    function _superhist-precmd() {
-	export _SUPERHIST_RETVAL="${?}"
-    }
-
-    autoload -U add-zsh-hook
-    add-zsh-hook zshaddhistory _superhist-addhistory
-    add-zsh-hook precmd _superhist-precmd
 fi
 
 # Setup backlinks

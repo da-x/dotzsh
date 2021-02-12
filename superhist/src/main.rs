@@ -10,6 +10,7 @@ use file_lock::FileLock;
 use serde::{Serialize, Deserialize};
 use xz2::read::{XzDecoder};
 use xz2::write::{XzEncoder};
+use std::collections::HashMap;
 
 #[derive(Error, Debug)]
 enum Error {
@@ -48,12 +49,19 @@ pub struct Event {
 #[derive(StructOpt, Debug)]
 enum Command {
     Archive,
+    Import {
+        #[structopt(short = "p")]
+        hist_file: PathBuf,
+    },
     FC {
         #[structopt(short = "w")]
         workdir: Option<String>,
 
         #[structopt(short = "s")]
         start_nr: u64,
+
+        #[structopt(short = "f")]
+        fetch: Option<u64>,
     },
     Add {
         #[structopt(short = "x")]
@@ -176,48 +184,154 @@ impl SuperHist {
         Ok(())
     }
 
-    /// Add event to the current file
-    fn add(&self, mut event: Event) -> Result<(), Error> {
-        match &mut event.payload {
-            Payload::Command { text, .. }  => {
-                *text = text.trim().to_string();
-                if text == "" {
-                    return Ok(());
+    /// Import an old zsh history file
+    fn import(&self, pathname: &PathBuf) -> Result<(), Error> {
+        let reader = BufReader::new(File::open(pathname)?);
+
+        // Read current file
+        lazy_static::lazy_static! {
+            static ref RE: Regex = Regex::new("^: ([0-9]+) ([^:]*):0;((.|\n)*)$").unwrap();
+        }
+
+        let mut bunch = String::new();
+        let mut open = false;
+        let mut bunches = vec![];
+
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                if line.ends_with("\\") {
+                    bunch += &line[0 .. line.len() - 1];
+                    bunch += "\n";
+                    open = true;
+                    continue;
+                }
+                if open {
+                    bunch += &line;
+                    bunches.push(std::mem::replace(&mut bunch, String::new()));
+                    open = false;
+                } else {
+                    bunches.push(line.to_owned());
                 }
             }
-            _ => { }
         }
+
+        let mut events = vec![];
+        for bunch in bunches.iter() {
+            if let Some(captures) = RE.captures(&bunch) {
+                let ts = captures.get(1).unwrap().as_str();
+                let workdir = captures.get(2).unwrap().as_str();
+                let command = captures.get(3).unwrap().as_str();
+                let event = Event {
+                    timestamp: ts.parse().unwrap(),
+                    idx: 0,
+                    terminal: "/dev/pts/999".to_owned(),
+                    payload: Payload::Command {
+                        text: command.to_owned(),
+                        workdir: workdir.to_owned(),
+                    }
+                };
+                events.push(event);
+            }
+        }
+
+        self.add(events)?;
+
+        Ok(())
+    }
+
+    /// Add event to the current file
+    fn add(&self, mut events: Vec<Event>) -> Result<(), Error> {
+        for event in events.iter_mut() {
+            match &mut event.payload {
+                Payload::Command { text, .. }  => {
+                    *text = text.trim().to_string();
+                }
+                _ => { }
+            }
+        }
+
         let lock = self.lock()?;
         let mut file = OpenOptions::new().create(true).append(true).open(self.current_file())?;
-        let string = format!("{}\n", serde_json::ser::to_string(&event)?);
-        file.write(string.as_bytes())?;
+        for event in events.iter() {
+            match &event.payload {
+                Payload::Command { text, .. }  => {
+                    if text == "" {
+                        continue;
+                    }
+                }
+                _ => { }
+            }
+
+            let string = format!("{}\n", serde_json::ser::to_string(&event)?);
+            file.write(string.as_bytes())?;
+        }
         lock.unlock()?;
         Ok(())
     }
 
     /// Somewhat behave like the 'fc' command for the full database
-    fn fc(&self, workdir: &Option<String>, mut nr: u64) -> Result<(), Error> {
-        let filter_func = &|event: &Event| -> bool {
-            if let Payload::Command { workdir: command_workdir, .. } = &event.payload {
-                if let Some(workdir) = workdir {
-                    command_workdir == workdir
-                } else {
-                    true
+    fn fc(&self, workdir: &Option<String>, mut nr: u64, fetch: Option<u64>) -> Result<(), Error> {
+        let mut exits = std::collections::HashMap::new();
+        type ExitMap = HashMap<(String, u64), (u32, UnixTime)>;
+        let filter_func = |exits: &mut ExitMap, event: &Event| -> bool {
+            match &event.payload {
+                Payload::Command { workdir: command_workdir, .. } => {
+                    if let Some(workdir) = workdir {
+                        command_workdir == workdir
+                    } else {
+                        true
+                    }
                 }
-            } else {
-                false
+                Payload::ExitCode(code) => {
+                    exits.insert((event.terminal.clone(), event.idx), (*code, event.timestamp));
+                    false
+                }
+                _ => {
+                    false
+                }
             }
         };
 
         let mut buffer = std::io::BufWriter::with_capacity(0x10000, std::io::stdout());
         let mut hashset = std::collections::HashSet::new();
-        let mut print_func = |event: Event| -> Result<(), Error> {
+
+        let mut print_func = |exits: &ExitMap, event: Event| -> Result<(), Error> {
             if let Payload::Command { text, .. } = event.payload {
+                let key = (event.terminal.clone(), event.idx);
                 if !hashset.contains(&text) {
-                    buffer.write(&format!("{}  ", nr).as_bytes())?;
-                    buffer.write(text
-                        .replace("\\", "\\\\").replace("\n", "\\n").as_bytes())?;
-                    buffer.write("\n".as_bytes())?;
+                    let (print_nr, matching) = if let Some(fetch_nr) = fetch {
+                        (false, fetch_nr == nr)
+                    } else {
+                        (true, true)
+                    };
+                    if matching {
+                        if print_nr {
+                            buffer.write(&format!("{} ", color::Fg(color::Rgb(60, 60, 60))).as_bytes())?;
+                            buffer.write(&format!("{:width$}  ", nr, width=6).as_bytes())?;
+                            use chrono::prelude::*;
+                            let naive = NaiveDateTime::from_timestamp(event.timestamp as i64, 0);
+                            let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
+                            use termion::color;
+                            buffer.write(&format!("{}{} ",
+                                    color::Fg(color::Rgb(100, 100, 100)),
+                                    datetime.format("%d.%m.%y")).as_bytes())?;
+
+                            if let Some((exitcode, _timestamp)) = exits.get(&key) {
+                                if *exitcode == 0 {
+                                    buffer.write(&format!("{}  ", color::Fg(color::Reset)).as_bytes())?;
+                                } else {
+                                    buffer.write(&format!("{}x{} ",
+                                            color::Fg(color::Rgb(255, 0, 0)),
+                                            color::Fg(color::Reset)).as_bytes())?;
+                                }
+                                buffer.write(&format!("{} ", color::Fg(color::Rgb(240, 240, 240))).as_bytes())?;
+                            } else {
+                                buffer.write(&format!("{}   ", color::Fg(color::Rgb(170, 170, 170))).as_bytes())?;
+                            }
+                        }
+                        buffer.write(text.replace("\n", "\\n").as_bytes())?;
+                            buffer.write("\n".as_bytes())?;
+                    }
                     hashset.insert(text);
                     nr += 1;
                 }
@@ -236,8 +350,8 @@ impl SuperHist {
 
         for line in vx.iter().rev() {
             let event : Event = serde_json::de::from_str(line)?;
-            if filter_func(&event) {
-                print_func(event)?;
+            if filter_func(&mut exits, &event) {
+                print_func(&exits, event)?;
             }
         }
 
@@ -260,16 +374,16 @@ impl SuperHist {
 
                     for line in decompressor.lines() {
                         let event : Event = serde_json::de::from_str(line?.as_str())?;
-                        if filter_func(&event) {
-                            print_func(event)?;
+                        if filter_func(&mut exits, &event) {
+                            print_func(&exits, event)?;
                         }
                     }
                 } else {
                     let reader = BufReader::new(File::open(path)?);
                     for line in reader.lines() {
                         let event : Event = serde_json::de::from_str(line?.as_str())?;
-                        if filter_func(&event) {
-                            print_func(event)?;
+                        if filter_func(&mut exits, &event) {
+                            print_func(&exits, event)?;
                         }
                     }
                 }
@@ -295,8 +409,11 @@ fn sub_main() -> Result<(), Error> {
         Command::Archive => {
             superhist.archive()?;
         },
-        Command::FC { workdir, start_nr } => {
-            superhist.fc(&workdir, start_nr)?;
+        Command::Import { hist_file } => {
+            superhist.import(&hist_file)?;
+        },
+        Command::FC { workdir, start_nr, fetch } => {
+            superhist.fc(&workdir, start_nr, fetch)?;
         },
         Command::Add { timestamp, idx, terminal, command, workdir, exit_code, start } => {
             let event = Event {
@@ -319,7 +436,7 @@ fn sub_main() -> Result<(), Error> {
                     _ => return Err(Error::InvalidParams),
                 }
             };
-            superhist.add(event)?;
+            superhist.add(vec![event])?;
         },
     }
 

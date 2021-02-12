@@ -23,13 +23,13 @@ ${bin} add -i 5 -t /dev/pts/10 -x 1600000006 -e 0
 cat ${tmp_dir}/superhist/db.json
 
 check_fc() {
-    ${bin} fc
+    ${bin} fc -s 0
 
     if [[ "$(${bin} fc | wc -l)" != "3" ]] ; then
 	e=1
     fi
 
-    ${bin} fc -w /tmp/sub
+    ${bin} fc -w /tmp/sub -s 0
 
     if [[ "$(${bin} fc -w /tmp/sub | wc -l)" != "2" ]] ; then
 	e=1
@@ -48,7 +48,7 @@ check_fc
 ${bin} add -i 5 -t /dev/pts/10 -x 1600000005 -c "command 4" -w "/tmp/sub"
 ${bin} add -i 5 -t /dev/pts/10 -x 1600000006 -e 0
 
-${bin} fc
+${bin} fc -s 0
 
 rm -rf $tmp_dir
 
