@@ -473,18 +473,6 @@ my-zsh-DiffHunksCached() {
 }
 zle -N my-zsh-DiffHunksCached
 
-my-zsh-git-show() { git show }
-zle -N my-zsh-git-show
-
-my-zsh-git-show-head-1() { git show HEAD~1 }
-zle -N my-zsh-git-show-head-1
-
-my-zsh-git-show-head-2() { git show HEAD~2 }
-zle -N my-zsh-git-show-head-2
-
-my-zsh-git-show-head-3() { git show HEAD~3 }
-zle -N my-zsh-git-show-head-3
-
 my-zsh-git-diff() {
     git diff
 }
@@ -538,9 +526,22 @@ my-zsh-CtrlG_q() {
 }
 zle -N my-zsh-CtrlG_q
 
+# Ensure precmds are run after cd
+fzf-redraw-prompt() {
+  # We use this despite:
+  #  [zsh] Don't run precmd hooks in cd widget (#2340)
+  #  43b3b907f8b73efdeb6a55ba995c81ab708baf32
+  local precmd
+  for precmd in $precmd_functions; do
+    $precmd
+  done
+  zle reset-prompt
+}
+zle -N fzf-redraw-prompt
+
 my-zsh-cd-parent() {
     cd ..
-    fzf-redraw-prompt
+    zle fzf-redraw-prompt
 }
 zle -N my-zsh-cd-parent
 
@@ -620,11 +621,6 @@ bindkey "^Gs" my-zsh-git-status
 bindkey "^G^S" my-zsh-git-status
 bindkey "^Gt" my-zsh-git-checkout
 bindkey "^G^T" my-zsh-git-checkout
-bindkey "^Gz" my-zsh-git-show
-bindkey "^G^Z" my-zsh-git-show
-bindkey "^Gz1" my-zsh-git-show-head-1
-bindkey "^Gz2" my-zsh-git-show-head-2
-bindkey "^Gz3" my-zsh-git-show-head-3
 
 # Edit the current command line in $EDITOR
 
@@ -998,8 +994,14 @@ git-wtb-switch() {
 	return 0
     fi
 
-    if [[ "$(pwd)" != "${maintree}" ]] ; then
-	cd ${maintree}
+    local toplevel=$(git rev-parse --show-toplevel)
+    if [[ "${toplevel}" != "${maintree}" ]] ; then
+	if [[ "$(basename ${toplevel})" != "$name" ]] ; then
+	    # The checkout is redirected to the main worktree only if the
+	    # name of the branch does not match the name of the directory
+	    # of the worktree.
+	    cd ${maintree}
+	fi
     fi
 
     git checkout ${name}
