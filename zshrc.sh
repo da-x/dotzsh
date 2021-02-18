@@ -967,10 +967,28 @@ git-wtb-remove() {
 
 git-wtb-switch() {
     # Switch to a worktree's directory, based on its branch name
-    local name=${1}
+    local name=""
+    local create=0
+
+    while [[ $# != 0 ]] ; do
+	if [[ "$1" == "-c" ]] ; then
+	    create=1
+	    shift
+	    continue
+	fi
+	if [[ "$name" != "" ]] ; then
+	    echo "Name already specified"
+	    return 1
+	fi
+	name="$1"
+	break
+    done
+
     if [[ ${name} == "" ]] ; then
+	echo "Name not specified"
 	return
     fi
+
     local maintree=""
     local mainbranch=""
     while read dir details ; do
@@ -989,6 +1007,26 @@ git-wtb-switch() {
 	    return
 	fi
     done < <(git worktree list)
+
+    if [[ "$create" == "1" ]] ; then
+	branchinfo=$(git show-ref refs/heads/${name})
+	if [[ "${branchinfo}" == "" ]] ; then
+	    echo "No such local branch"
+	    return 1
+	fi
+	wtbpath=$(git config wtb.path)
+	if [[ "${wtbpath}" == "" ]] ; then
+	    echo "Not configured."
+	    echo
+	    echo "Run: git config wtb.path [path]"
+	    echo ""
+	    echo "For example: git config wtb.path /tmp/$USER/git/$(pwd)"
+	    return 1
+	fi
+	git worktree add ${wtbpath}/${name} ${name}
+	cd ${wtbpath}/${name}
+	return 0
+    fi
 
     if [[ "$mainbranch" == "$branch" ]] && [[ "$mainbranch" == "$name" ]] ; then
 	return 0
