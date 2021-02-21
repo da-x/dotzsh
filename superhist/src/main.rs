@@ -3,13 +3,13 @@ use std::path::PathBuf;
 use std::io::Write;
 use std::fs::{OpenOptions, File};
 use std::io::{BufReader, BufRead};
-use std::io::{BufWriter};
+use std::io::BufWriter;
 use thiserror::Error;
 use regex::Regex;
 use file_lock::FileLock;
 use serde::{Serialize, Deserialize};
-use xz2::read::{XzDecoder};
-use xz2::write::{XzEncoder};
+use xz2::read::XzDecoder;
+use xz2::write::XzEncoder;
 use std::collections::HashMap;
 
 #[derive(Error, Debug)]
@@ -179,6 +179,8 @@ impl SuperHist {
         }
 
         OpenOptions::new().write(true).truncate(true).open(self.current_file())?;
+
+        std::fs::remove_file(self.current_file())?;
 
         lock.unlock()?;
         Ok(())
