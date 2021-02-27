@@ -189,6 +189,10 @@ alias psfa='psf -fe'
 
 GREP_COLORS='ms=38;5;47;1:mc=01;34:sl=:cx=:fn=38;5;117:ln=38;5;32:bn=31:se=38;5;50;1'
 
+add-feed() {
+    echo $1 >> ~/.newsboat/urls
+}
+
 # Terminal setup
 
 my-noop-func() { }
