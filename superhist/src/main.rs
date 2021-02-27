@@ -330,9 +330,11 @@ impl SuperHist {
                             } else {
                                 buffer.write(&format!("{}   ", color::Fg(color::Rgb(170, 170, 170))).as_bytes())?;
                             }
+                            buffer.write(text.replace("\n", "\\n").as_bytes())?;
+                        } else {
+                            buffer.write(text.as_bytes())?;
                         }
-                        buffer.write(text.replace("\n", "\\n").as_bytes())?;
-                            buffer.write("\n".as_bytes())?;
+                        buffer.write("\n".as_bytes())?;
                     }
                     hashset.insert(text);
                     nr += 1;

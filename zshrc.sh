@@ -323,12 +323,12 @@ if [[ -e ${ZSH_ROOT}/superhist/bin/superhist ]] ; then
 
     function _fc_per_directory_history_fetch() {
 	BUFFER=$(${ZSH_ROOT}/superhist/bin/superhist fc -s 1 -w $(realpath $PWD) -f $1)
-	zle end-of-line
+	zle end-of-buffer-or-history
     }
 
     function _fc_history_fetch() {
 	BUFFER=$(${ZSH_ROOT}/superhist/bin/superhist fc -s 1 -f $1)
-	zle end-of-line
+	zle end-of-buffer-or-history
     }
 
     autoload -U add-zsh-hook

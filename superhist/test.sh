@@ -25,13 +25,13 @@ cat ${tmp_dir}/superhist/db.json
 check_fc() {
     ${bin} fc -s 0
 
-    if [[ "$(${bin} fc | wc -l)" != "3" ]] ; then
+    if [[ "$(${bin} fc -s 0 | wc -l)" != "3" ]] ; then
 	e=1
     fi
 
     ${bin} fc -w /tmp/sub -s 0
 
-    if [[ "$(${bin} fc -w /tmp/sub | wc -l)" != "2" ]] ; then
+    if [[ "$(${bin} fc -s 0 -w /tmp/sub | wc -l)" != "2" ]] ; then
 	e=1
     fi
 }
