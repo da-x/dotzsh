@@ -286,17 +286,23 @@ if [[ -e ${ZSH_ROOT}/superhist/bin/superhist ]] ; then
     SAVEHIST=1000
     HISTSIZE=1000
 
+    function _superhist_root() {
+	echo $(dirname ${HISTFILE})/superhist
+    }
+
     _superhist_idx=0
     _superhist_term_id=$(tty)
 
     function _superhist-addhistory() {
 	local cmd=$(echo $@ | tr '\n' ' ')
+	local SUPERHIST_ROOT=$(_superhist_root)
+
 	if [[ "${cmd}" =~ '^(\s)*$' ]]; then
 	    true
 	else
 	    _superhist_command=y
 	    _superhist_idx=$(($_superhist_idx + 1))
-	    ${ZSH_ROOT}/superhist/bin/superhist add \
+	    ${ZSH_ROOT}/superhist/bin/superhist --root ${SUPERHIST_ROOT} add \
 		-i ${_superhist_idx} \
 		-t ${_superhist_term_id} \
 		-x $(date +%s) \
@@ -307,9 +313,10 @@ if [[ -e ${ZSH_ROOT}/superhist/bin/superhist ]] ; then
 
     function _superhist-precmd() {
 	local _superhist_exitcode=${?}
+	local SUPERHIST_ROOT=$(_superhist_root)
 	if [[ "$_superhist_command" == "y" ]] ; then
 	    unset _superhist_command
-	    ${ZSH_ROOT}/superhist/bin/superhist add \
+	    ${ZSH_ROOT}/superhist/bin/superhist --root ${SUPERHIST_ROOT} add \
 		-i ${_superhist_idx} \
 		-t ${_superhist_term_id} \
 		-x $(date +%s) \
@@ -318,20 +325,24 @@ if [[ -e ${ZSH_ROOT}/superhist/bin/superhist ]] ; then
     }
 
     function _fc_per_directory_history() {
-	${ZSH_ROOT}/superhist/bin/superhist fc -s 1 -w $(realpath $PWD)
+	local SUPERHIST_ROOT=$(_superhist_root)
+	${ZSH_ROOT}/superhist/bin/superhist --root ${SUPERHIST_ROOT} fc -s 1 -w $(realpath $PWD)
     }
 
     function _fc_history() {
-	${ZSH_ROOT}/superhist/bin/superhist fc -s 1
+	local SUPERHIST_ROOT=$(_superhist_root)
+	${ZSH_ROOT}/superhist/bin/superhist --root ${SUPERHIST_ROOT} fc -s 1
     }
 
     function _fc_per_directory_history_fetch() {
-	BUFFER=$(${ZSH_ROOT}/superhist/bin/superhist fc -s 1 -w $(realpath $PWD) -f $1)
+	local SUPERHIST_ROOT=$(_superhist_root)
+	BUFFER=$(${ZSH_ROOT}/superhist/bin/superhist --root ${SUPERHIST_ROOT}  fc -s 1 -w $(realpath $PWD) -f $1)
 	zle end-of-buffer-or-history
     }
 
     function _fc_history_fetch() {
-	BUFFER=$(${ZSH_ROOT}/superhist/bin/superhist fc -s 1 -f $1)
+	local SUPERHIST_ROOT=$(_superhist_root)
+	BUFFER=$(${ZSH_ROOT}/superhist/bin/superhist --root ${SUPERHIST_ROOT}  fc -s 1 -f $1)
 	zle end-of-buffer-or-history
     }
 

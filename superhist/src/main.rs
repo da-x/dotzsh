@@ -20,8 +20,6 @@ enum Error {
     VarError(#[from] std::env::VarError),
     #[error("json error; {0}")]
     CsvError(#[from] serde_json::Error),
-    #[error("no storage path")]
-    NoPathError,
     #[error("invalid parameters")]
     InvalidParams,
 }
@@ -93,7 +91,7 @@ struct Opt {
     debug: bool,
 
     #[structopt(long = "root")]
-    root: Option<PathBuf>,
+    root: PathBuf,
 
     #[structopt(subcommand)]
     command: Command,
@@ -101,16 +99,6 @@ struct Opt {
 
 lazy_static::lazy_static! {
     static ref RE: Regex = Regex::new(": ([0-9]+) (([^:]*):)?0;(.*)$").unwrap();
-}
-
-fn get_hist_root() -> Result<PathBuf, Error> {
-    if let Ok(histfile) = std::env::var("HISTFILE") {
-        if let Some(path) = PathBuf::from(histfile).parent() {
-            return Ok(path.join("superhist"));
-        }
-    }
-
-    Err(Error::NoPathError)
 }
 
 pub struct SuperHist {
@@ -402,12 +390,7 @@ impl SuperHist {
 
 fn sub_main() -> Result<(), Error> {
     let opt = Opt::from_args();
-    let hist_root = get_hist_root()?;
-    if !hist_root.exists() {
-        std::fs::create_dir(&hist_root)?;
-    }
-
-    let superhist = SuperHist::new(hist_root);
+    let superhist = SuperHist::new(opt.root);
 
     match opt.command {
         Command::Archive => {
