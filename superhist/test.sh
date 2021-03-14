@@ -5,12 +5,11 @@ set -eu
 
 e=0
 
-tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-bin=${tmp_dir}/superhist.exe
+tmp_dir=$(mktemp -d -t superhist-ci-XXXXXXXXXX)
+mkdir -p ${tmp_dir}/superhist
 
-./build.sh --dest ${bin}
-
-export HISTFILE=${tmp_dir}/history
+./build.sh --dest ${tmp_dir}/superhist.exe
+bin="${tmp_dir}/superhist.exe --root ${tmp_dir}/superhist"
 
 ${bin} add -i 0 -t /dev/pts/10 -x 1600000000 -s
 ${bin} add -i 1 -t /dev/pts/10 -x 1600000001 -c "command 1" -w "/tmp"
@@ -49,6 +48,22 @@ ${bin} add -i 5 -t /dev/pts/10 -x 1600000005 -c "command 4" -w "/tmp/sub"
 ${bin} add -i 5 -t /dev/pts/10 -x 1600000006 -e 0
 
 ${bin} fc -s 0
+
+${bin} proc-add -a "procedure" -c "command" -w "/w"
+${bin} proc-add -a "other-procedure" -c "other-command" -w "/w"
+${bin} proc-add -c "unaliased" -w "/w"
+${bin} proc-add -c "ls" -w "/w"
+${bin} proc-add -c "export A=2" -w "/w"
+
+if [[ $# != 0 ]] && [[ "$1" == "keep" ]] ; then
+    set +x
+    echo
+    echo $tmp_dir
+    echo
+    echo export BUILD=\"./build.sh --dest ${tmp_dir}/superhist.exe\"
+    echo export BIN=\"${bin}\"
+    exit 0
+fi
 
 rm -rf $tmp_dir
 
