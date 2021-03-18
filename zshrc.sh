@@ -96,6 +96,7 @@ alias gsh='git show'
 alias gti='git'
 alias gtb='git tracking-branch'
 alias gts='git ctags'
+alias gwh='git-wtb-help'
 alias gwd='git-wtb-remove'
 alias gws='git-wtb-switch'
 alias gwr='git-wtb-rename'
@@ -901,6 +902,27 @@ git-watch() {
 # Git worktree+branches handy commands
 #------------------------------------------------------------------------------------------
 
+git-wtb-path() {
+    WTB_PATH=$(git config wtb.path)
+    if [[ "${WTB_PATH}" == "" ]] ; then
+	echo "Not configured."
+	echo
+	echo "Run: git config wtb.path [path]"
+	echo ""
+	echo "For example: git config wtb.path /tmp/$USER/git/$(pwd)"
+	return 1
+    fi
+    return 0
+}
+
+git-wtb-help() {
+    echo "gws - git-wtb-switch [name] (-c/--create)"
+    echo "gwr - git-wtb-rename [new-name]"
+    echo "gwd - git-wtb-remove (-f)"
+    echo "gwh - git-wtb-help"
+    echo "gwl - git worktree list"
+}
+
 git-wtb-rename() {
     # Rename current Git branch *and* git worktree directory basename, plus
     # change to the moved worktree directory.
@@ -908,16 +930,23 @@ git-wtb-rename() {
     if [[ ${newname} == "" ]] ; then
 	return
     fi
+
+    git-wtb-path
+
+    if [[ "$?" != "0" ]] ; then
+	return
+    fi
+
     while read dir details ; do
 	if [[ "${dir}" == "$(pwd)" ]] ; then
 	    local branch=$(echo ${details} | awk -F'[\\]\\[]' '{print $2}')
-	    local last=$(basename ${dir})
-	    if [[ "${branch}" == "${last}" ]] ; then
+	    if [[ "${WTB_PATH}/${branch}" == "${dir}" ]] ; then
+		newdirname=${WTB_PATH}/${newname}
 		if [[ -d ${newdirname} ]] ; then
 		    echo Already exists
 		    break
 		fi
-		newdirname=$(dirname ${dir})/${newname}
+
 		git worktree move ${dir} ${newdirname}
 		git branch -M ${last} ${newname}
 		cd ${newdirname}
@@ -980,10 +1009,17 @@ git-wtb-switch() {
     # Switch to a worktree's directory, based on its branch name
     local name=""
     local create=0
+    local base=""
 
     while [[ $# != 0 ]] ; do
-	if [[ "$1" == "-c" ]] ; then
+	if [[ "$1" == "-c" ]] || [[ "$1" == "--create" ]] ; then
 	    create=1
+	    shift
+	    continue
+	fi
+	if [[ "$1" == "-b" ]] || [[ "$1" == "--base" ]] ; then
+	    shift
+	    base="$1"
 	    shift
 	    continue
 	fi
@@ -992,7 +1028,7 @@ git-wtb-switch() {
 	    return 1
 	fi
 	name="$1"
-	break
+	shift
     done
 
     if [[ ${name} == "" ]] ; then
@@ -1020,22 +1056,33 @@ git-wtb-switch() {
     done < <(git worktree list)
 
     if [[ "$create" == "1" ]] ; then
+	git-wtb-path
+	if [[ "$?" != "0" ]] ; then
+	    return 1
+	fi
+
+	set -x
+
 	branchinfo=$(git show-ref refs/heads/${name})
+
 	if [[ "${branchinfo}" == "" ]] ; then
-	    echo "No such local branch"
-	    return 1
+	    if [[ "${base}" != "" ]] ; then
+		if [[ "$(git rev-parse ${base})" == "" ]] ; then
+		    echo "Base ${base} does not resolve"
+		    return 1
+		fi
+	    fi
+
+	    if [[ "${base}" == "" ]] ; then
+		echo "No such local branch"
+		return 1
+	    else
+		git branch --track ${name} ${base}
+	    fi
 	fi
-	wtbpath=$(git config wtb.path)
-	if [[ "${wtbpath}" == "" ]] ; then
-	    echo "Not configured."
-	    echo
-	    echo "Run: git config wtb.path [path]"
-	    echo ""
-	    echo "For example: git config wtb.path /tmp/$USER/git/$(pwd)"
-	    return 1
-	fi
-	git worktree add ${wtbpath}/${name} ${name}
-	cd ${wtbpath}/${name}
+
+	git worktree add ${WTB_PATH}/${name} ${name}
+	cd ${WTB_PATH}/${name}
 	return 0
     fi
 
