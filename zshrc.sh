@@ -1041,6 +1041,7 @@ git-wtb-rename() {
 		    break
 		fi
 
+		mkdir -p $(dirname ${newdirname})
 		git worktree move ${dir} ${newdirname}
 		git branch -M ${last} ${newname}
 		cd ${newdirname}
@@ -1142,6 +1143,7 @@ git-wtb-switch() {
 	    if [[ ! -d ${dir} ]] ; then
 		echo Worktree missing, recreating
 		git worktree remove ${dir}
+		mkdir -p $(dirname ${dir})
 		git worktree add ${dir} ${branch}
 	    fi
 	    cd ${dir}
