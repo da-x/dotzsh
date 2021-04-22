@@ -378,7 +378,7 @@ if [[ -e ${ZSH_ROOT}/superhist/bin/superhist ]] ; then
 	    echo
 	    echo "[\e[1;32m$idx\e[0m]: \e[1;37m${cmd}\e[0m"
 	    echo
-	    eval $(echo ${_superhist_proc_res} | jq '.exec_queue' - | jq -r '.['$idx'][1]')
+	    eval $(echo ${_superhist_proc_res} | jq '.exec_queue' - | jq -r '.['$idx'][1]')  </dev/tty
 
 	    if [[ "$?" != "0" ]] ; then
 		local save=$?
