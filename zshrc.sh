@@ -255,8 +255,6 @@ setopt histfindnodups
 setopt extended_history
 setopt hist_verify
 setopt inc_append_history
-setopt histsavecwd 2>&1 | grep -q "no such option"
-no_histsavecwd="$?"
 
 unsetopt share_history
 
@@ -435,30 +433,27 @@ if [[ -e ${ZSH_ROOT}/superhist/bin/superhist ]] ; then
     add-zsh-hook precmd _superhist-precmd
 fi
 
-if [[ "$no_histsavecwd" == "1" ]] ; then
-    setopt histsavecwd
-    # CTRL-R - Paste the selected command from history into the command line
-    fzf-per-directory-history-widget() {
-      local selected num
-      setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
-      selected=( $(_fc_per_directory_history |
-	FZF_DEFAULT_OPTS="--ansi --height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS -n2..,.. --tiebreak=index --bind=ctrl-r:toggle-sort $FZF_CTRL_R_OPTS --query=${(qqq)LBUFFER} +m" $(__fzfcmd)) )
-      local ret=$?
-      if [ -n "$selected" ]; then
-	num=$selected[1]
-	if [ -n "$num" ]; then
-	  _fc_per_directory_history_fetch $num
-	fi
-      fi
-      zle reset-prompt
-      return $ret
-    }
+# Per-directory history provided by superhist
+fzf-per-directory-history-widget() {
+  local selected num
+  setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
+  selected=( $(_fc_per_directory_history |
+    FZF_DEFAULT_OPTS="--ansi --height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS -n2..,.. --tiebreak=index --bind=ctrl-r:toggle-sort $FZF_CTRL_R_OPTS --query=${(qqq)LBUFFER} +m" $(__fzfcmd)) )
+  local ret=$?
+  if [ -n "$selected" ]; then
+    num=$selected[1]
+    if [ -n "$num" ]; then
+      _fc_per_directory_history_fetch $num
+    fi
+  fi
+  zle reset-prompt
+  return $ret
+}
 
-    zle     -N   fzf-per-directory-history-widget
-    bindkey '^Ne' fzf-per-directory-history-widget
-    bindkey '^Nh' fzf-per-directory-history-widget
-    bindkey '^N^H' fzf-per-directory-history-widget
-fi
+zle     -N   fzf-per-directory-history-widget
+bindkey '^Ne' fzf-per-directory-history-widget
+bindkey '^Nh' fzf-per-directory-history-widget
+bindkey '^N^H' fzf-per-directory-history-widget
 
 # CTRL-R - Paste the selected command from history into the command line
 fzf-super-history-widget() {
