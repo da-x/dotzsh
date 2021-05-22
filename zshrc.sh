@@ -544,10 +544,26 @@ emit-picked-git-branch-name() {
 zle -N emit-picked-git-branch-name
 
 my-zsh-git-checkout() {
-    git-wtb-switch $(git-mru-branch | fzf)
+    local name=$(git-mru-branch | fzf --tac -e +s)
+    if [[ ${name} == "" ]] ; then
+	return
+    fi
+    echo
+    git-wtb-switch ${name}
     zle accept-line
 }
 zle -N my-zsh-git-checkout
+
+my-zsh-git-worktree-checkout() {
+    local name=$(git-mru-branch | fzf --tac -e +s)
+    if [[ ${name} == "" ]] ; then
+	return
+    fi
+    echo
+    git-wtb-switch -c ${name}
+    zle accept-line
+}
+zle -N my-zsh-git-worktree-checkout
 
 my-zsh-git-log() {
     git log
@@ -701,6 +717,7 @@ bindkey "^GP" emit-picked-git-branch-name
 bindkey "^GR" emit-current-git-root-relative
 bindkey "^GT" emit-current-git-path-to-root
 bindkey "^Gc" my-zsh-git-checkout
+bindkey "^GC" my-zsh-git-worktree-checkout
 bindkey "^Gd" my-zsh-CtrlG_d
 bindkey "^G^d" my-zsh-CtrlG_d
 bindkey "^GD" my-zsh-CtrlG_D
@@ -720,8 +737,6 @@ bindkey "^Gn" my-zsh-git-diff-cached
 bindkey "^G^N" my-zsh-git-diff-cached
 bindkey "^Gs" my-zsh-git-status
 bindkey "^G^S" my-zsh-git-status
-bindkey "^Gt" my-zsh-git-checkout
-bindkey "^G^T" my-zsh-git-checkout
 
 # Edit the current command line in $EDITOR
 
@@ -1142,6 +1157,10 @@ git-wtb-switch() {
 		git worktree add ${dir} ${branch}
 	    fi
 	    cd ${dir}
+	    local branch_ref="$(git rev-parse --git-common-dir)/refs/heads/${branch}"
+	    if [[ -e ${branch_ref} ]] ; then
+		touch ${branch_ref}
+	    fi
 	    return
 	fi
     done < <(git worktree list)
@@ -1151,8 +1170,6 @@ git-wtb-switch() {
 	if [[ "$?" != "0" ]] ; then
 	    return 1
 	fi
-
-	set -x
 
 	branchinfo=$(git show-ref refs/heads/${name})
 
