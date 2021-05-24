@@ -1020,7 +1020,7 @@ git-wtb-path() {
 }
 
 git-wtb-help() {
-    echo "gws - git-wtb-switch [name] (-c/--create)"
+    echo "gws - git-wtb-switch [name] (-c/--create) --base base"
     echo "gwr - git-wtb-rename [new-name]"
     echo "gwd - git-wtb-remove (-f)"
     echo "gwh - git-wtb-help"
