@@ -1022,7 +1022,7 @@ git-wtb-path() {
 git-wtb-help() {
     echo "gws - git-wtb-switch [name] (-c/--create) --base base"
     echo "gwr - git-wtb-rename [new-name]"
-    echo "gwd - git-wtb-remove (-f)"
+    echo "gwd - git-wtb-remove [name] (-f)"
     echo "gwh - git-wtb-help"
     echo "gwl - git worktree list"
 }
@@ -1068,17 +1068,19 @@ git-wtb-remove() {
 
     while [[ $# != 0 ]] ; do
 	if [[ "$1" == "-f" ]] ; then
-	    removeparams="-f"
+	    echo "$1" xx
+	    removeparams="--force"
 	    force=1
 	    shift
 	    continue
 	fi
-	if [[ "$name" != " " ]] ; then
+	if [[ "$name" != "" ]] ; then
 	    echo "Name already specified"
 	    return 1
 	fi
 	name="$1"
-	break
+	shift
+	continue
     done
 
     if [[ ${name} == "" ]] ; then
