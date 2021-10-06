@@ -107,9 +107,9 @@ alias fm='exo-open --launch FileManager'
 alias pfe='pty-for-each'
 alias pfes="pfe single '' --"
 alias rgsl='rg --sort-files --color always'
-alias rex1='rex wait-on 1 -- '
-alias rex2='rex wait-on 2 -- '
-alias rex3='rex wait-on 3 -- '
+alias rex1='rex wait-on -n 1 -- '
+alias rex2='rex wait-on -n 2 -- '
+alias rex3='rex wait-on -n 3 -- '
 
 which lsd 2>/dev/null >/dev/null
 if [[ "$?" == "0" ]] ; then
