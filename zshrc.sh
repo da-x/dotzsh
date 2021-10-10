@@ -1153,10 +1153,28 @@ git-wtb-switch() {
 	fi
 	if [[ "${branch}" == "${name}" ]] ; then
 	    if [[ ! -d ${dir} ]] ; then
-		echo Worktree missing, recreating
-		git worktree remove ${dir}
-		mkdir -p $(dirname ${dir})
-		git worktree add ${dir} ${branch}
+		local wd=$(git rev-parse --git-common-dir)/worktrees
+		local found=0
+
+		for i in ${wd}/*; do
+		    if [[ "$(cat ${i}/gitdir)" == "${dir}/.git" ]] ; then
+			echo Worktree missing, recovering
+			found=1
+			mkdir -p ${dir}
+			echo "gitdir: $(realpath ${i})" > ${dir}/.git
+			cd ${dir}
+			git checkout -- .
+			cd - > /dev/null
+			break
+		    fi
+		done
+
+		if [[ "${found}" == "0" ]] ; then
+		    echo Worktree missing, RECREATING
+		    git worktree remove ${dir}
+		    mkdir -p $(dirname ${dir})
+		    git worktree add ${dir} ${branch}
+		fi
 	    fi
 	    cd ${dir}
 	    local branch_ref="$(git rev-parse --git-common-dir)/refs/heads/${branch}"
