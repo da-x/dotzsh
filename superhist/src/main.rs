@@ -876,6 +876,8 @@ impl SuperHist {
 
     /// Somewhat behave like the 'fc' command for the full database
     fn fc(&self, workdir: &Option<String>, mut nr: u64, fetch: Option<u64>) -> Result<(), Error> {
+        let full_timestamp = std::env::var("SUPERHIST_FC__FULL_TIMESTAMP").is_ok();
+
         let mut exits = std::collections::HashMap::new();
         type ExitMap = HashMap<(String, u64), (u32, UnixTime)>;
         let filter_func = |exits: &mut ExitMap, event: &Event| -> bool {
@@ -916,10 +918,18 @@ impl SuperHist {
                             use chrono::prelude::*;
                             let naive = NaiveDateTime::from_timestamp(event.timestamp as i64, 0);
                             let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
+                            let converted: DateTime<Local> = DateTime::from(datetime);
+
                             use termion::color;
                             buffer.write(&format!("{}{} ",
                                     color::Fg(color::Rgb(100, 100, 100)),
-                                    datetime.format("%d.%m.%y")).as_bytes())?;
+                                    converted.format("%d.%m.%y")).as_bytes())?;
+
+                            if full_timestamp {
+                                buffer.write(&format!("{}{} ",
+                                        color::Fg(color::Rgb(100, 100, 100)),
+                                        converted.format("%H:%M:%S")).as_bytes())?;
+                            }
 
                             if let Some((exitcode, _timestamp)) = exits.get(&key) {
                                 if *exitcode == 0 {
