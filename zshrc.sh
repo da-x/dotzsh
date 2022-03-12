@@ -14,6 +14,7 @@ unset DISABLE_AUTO_UPDATE
 # Timeout
 
 KEYTIMEOUT=200
+export PROMPT_MODE=
 
 # Aliases
 
