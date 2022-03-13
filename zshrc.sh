@@ -1237,10 +1237,14 @@ git-wtb-switch() {
 
 envix_path=$(which envix 2>/dev/null)
 if [[ "${envix_path}" != "" ]] then
-    envix_prev_pwd="/"
+    envix_prev_pwd=""
 
     function envio_refresh_context() {
-	${envix_path} --previous "$(realpath ${envix_prev_pwd})" --current $(realpath ${PWD}) | source /dev/stdin
+	local prev=${envix_prev_pwd}
+	if [[ "${prev}" != "" ]] ; then
+	    prev="$(realpath ${envix_prev_pwd})"
+	fi
+	${envix_path} --previous "${prev}" --current $(realpath ${PWD}) | source /dev/stdin
 	envix_prev_pwd=${PWD}
     }
 
