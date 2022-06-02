@@ -943,6 +943,7 @@ precmd_functions+=set_prompt
 
 if [ -n "$TMUX" ]; then
     function tmux-refresh {
+	unset SSH_CUSTOM_CALLBACK
 	for i in $(tmux show-environment | grep -v "^-") ; do 
 	    export $i
 	done
