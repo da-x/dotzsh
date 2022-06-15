@@ -1005,6 +1005,13 @@ git-watch() {
     rex wait-on -g . -c -- "$@"
 }
 
+# Docker shortcuts
+#------------------------------------------------------------------------------------------
+
+docker-fzf-rm() {
+    docker rm -f $(docker ps | grep -v ^CONTAINER | fzf -m  | awk '{print $1}')
+}
+
 # Git worktree+branches handy commands
 #------------------------------------------------------------------------------------------
 
