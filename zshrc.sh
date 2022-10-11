@@ -9,6 +9,35 @@ CASE_SENSITIVE=true
 source ${ZSH_ROOT}/oh-my-zsh/oh-my-zsh.sh
 source ${ZSH_ROOT}/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source ${ZSH_ROOT}/zsh-titles/titles.plugin.zsh
+
+if [[ -e ${HOME}/.local/share/knots/shell/knots.zsh ]] ; then
+    source ${HOME}/.local/share/knots/shell/knots.zsh
+
+    bindkey "^[[1;5H" knot-edit-default  # C-home
+    bindkey "^[[1;5F" knot-pick-edit # C-end
+    bindkey "^[[3;5~" knot-edit-daily # C-del
+    bindkey "^[[5;5~" knot-pick-url # C-pageup
+    bindkey "^[[6;5~" knot-pick-chdir # C-pagedown
+    bindkey '^Nd' knot-edit-daily # C-n d
+    bindkey '^N^D' knot-edit-daily # C-n C-d
+    bindkey '^Ng' knot-pick-chdir # C-n g
+    bindkey '^N^G' knot-pick-chdir # C-n C-g
+    bindkey '^Nu' knot-pick-url # C-n u
+    bindkey '^N^u' knot-pick-url # C-n C-u
+
+    function knot-help() {
+        (grep -E '^ *bindkey' \
+	    ${ZSH_ROOT}/zshrc.sh | grep knot | \
+	    sed -E 's/^ *bindkey/bindkey/g' | \
+	    bat -p --color always -l zsh) | less -R
+    }
+    zle -N knot-help
+
+    bindkey '^N^[OP' knot-help  # Ctrl-N F1
+
+    alias cdn=knot-chdir-daily
+fi
+
 unset DISABLE_AUTO_UPDATE
 
 # Timeout
@@ -224,11 +253,8 @@ bindkey "^[[13;6~" my-noop-func
 bindkey "^[[14;6~" my-noop-func
 
 bindkey "^[[2;5~" my-noop-func
-bindkey "^[[3;5~" my-noop-func
 bindkey "^[[7;5~" my-noop-func
 bindkey "^[[8;5~" my-noop-func
-bindkey "^[[5;5~" my-noop-func
-bindkey "^[[6;5~" my-noop-func
 
 # Autoload stuff
 
@@ -906,23 +932,33 @@ set_prompt() {
 
     # Path: http://stevelosh.com/blog/2010/02/my-extravagant-zsh-prompt/
 
-    local pwd="${PWD/#$HOME\//}"
-    local dirpwd="${pwd:h}"
-    local basepwd="${pwd:t}"
-    if [[ "$pwd" == "/" ]] && [[ "$basepwd" == "/" ]]  ;then
-	basepwd="/"
-	dirpwd=""
-    elif [[ "$dirpwd" == "/" ]] && [[ "$basepwd" != "/" ]]  ;then
-	dirpwd="/"
-    elif [[ "$dirpwd" == "." ]] ;then
-	dirpwd=""
-    elif [[ "$pwd" == "$HOME" ]] ;then
-	dirpwd=""
-	basepwd=""
+    local dirpart=""
+    local knot=$(knots reverse-lookup --silent ${PWD})
+
+    if [[ "${knot}" == "" ]] ; then
+	local pwd="${PWD/#$HOME\//}"
+	local dirpwd="${pwd:h}"
+	local basepwd="${pwd:t}"
+	if [[ "$pwd" == "/" ]] && [[ "$basepwd" == "/" ]]  ;then
+	    basepwd="/"
+	    dirpwd=""
+	elif [[ "$dirpwd" == "/" ]] && [[ "$basepwd" != "/" ]]  ;then
+	    dirpwd="/"
+	elif [[ "$dirpwd" == "." ]] ;then
+	    dirpwd=""
+	elif [[ "$pwd" == "$HOME" ]] ;then
+	    dirpwd=""
+	    basepwd=""
+	else
+	    dirpwd="$dirpwd/"
+	fi
+
+	dirpart=":${dirpwd}%{$fg_bold[white]%}${basepwd}"
     else
-	dirpwd="$dirpwd/"
+	dirpart="%{$gh2%}:<%{$fg_bold[green]%}${knot}%{$reset_color%}%{$gh2%}>"
     fi
-    PS1+=" %{${HOST_PC_PROMPT_COLOR}%}${HOST_NAME_PROMPT_OVERRIDE}%{$reset_color$fg[white]%}:${dirpwd}%{$fg_bold[white]%}${basepwd}%{$reset_color%}"
+
+    PS1+=" %{${HOST_PC_PROMPT_COLOR}%}${HOST_NAME_PROMPT_OVERRIDE}%{$reset_color$fg[white]%}${dirpart}%{$reset_color%}"
 
     if [[ "$VIMRUNTIME" != "" ]] ; then
 	PS1+="%{$gh2%} $fg[yellow]<%{$fg_bold[yellow]%}VIM%{$gh2%}$fg[yellow]>%{$reset_color%}"
@@ -1252,7 +1288,7 @@ if [[ "${envix_path}" != "" ]] then
 	if [[ "${prev}" != "" ]] ; then
 	    prev="$(realpath ${envix_prev_pwd})"
 	fi
-	${envix_path} --previous "${prev}" --current $(realpath ${PWD}) | source /dev/stdin
+	${envix_path} --previous "${prev}" --current "$(realpath ${PWD})" | source /dev/stdin
 	envix_prev_pwd=${PWD}
     }
 
