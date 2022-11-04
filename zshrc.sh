@@ -370,91 +370,6 @@ if [[ -e ${ZSH_ROOT}/superhist/bin/superhist ]] ; then
 	zle end-of-buffer-or-history
     }
 
-    function fzf-super-history-set-proc() {
-	setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
-	local SUPERHIST_ROOT=$(_superhist_root)
-	local prev_result=()
-	if [[ "${_superhist_proc_res}" != "" ]] ; then
-	    local prev_result=(-p ${_superhist_proc_res})
-	fi
-
-	_superhist_proc_res=$(${ZSH_ROOT}/superhist/bin/superhist \
-	    --root ${SUPERHIST_ROOT} proc-add -w "$(realpath $PWD)" -c "${BUFFER}" -i \
-	    ${prev_result[@]})
-
-	fzf-super-history-handle-result
-
-	zle reset-prompt
-    }
-
-    function _superhist_procedure_exec() {
-	local idx=0
-	local size=$(echo ${_superhist_proc_res} | jq '.exec_queue' - | jq length -)
-
-	if [[ "${size}" == "0" ]] ; then
-	    return -1
-	fi
-
-	echo
-	echo "------ \e[1;37m Executing queue of size ${size} ------ \e[0m"
-
-	while [[ $(($idx < $size )) == "1" ]] ; do
-	    local cmd=$(echo ${_superhist_proc_res} | jq '.exec_queue' - | jq -r '.['$idx'][1]')
-	    echo
-	    echo "[\e[1;32m$idx\e[0m]: \e[1;37m${cmd}\e[0m"
-	    echo
-	    eval $(echo ${_superhist_proc_res} | jq '.exec_queue' - | jq -r '.['$idx'][1]')  </dev/tty
-
-	    if [[ "$?" != "0" ]] ; then
-		local save=$?
-		echo
-		echo "\e[1;31mAborted\e[0m sequence aborted due to error: ${save}"
-		echo
-		return -1
-	    fi
-
-	    idx=$(($idx + 1))
-	done
-
-	return 0
-    }
-
-    function fzf-super-history-handle-result() {
-	while [ 1 ] ; do
-	    local mode=$(echo ${_superhist_proc_res} | jq -r .mode -)
-
-	    if [[ "$mode" == "execute" ]] ; then
-		_superhist_procedure_exec
-
-		if [[ "$?" == "0" ]] ; then
-		    fzf-super-history-pick-proc
-		else
-		    break
-		fi
-	    else
-		break
-	    fi
-	done
-    }
-
-    function fzf-super-history-pick-proc() {
-	setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
-	local SUPERHIST_ROOT=$(_superhist_root)
-	local prev_result=()
-	if [[ "${_superhist_proc_res}" != "" ]] ; then
-	    local prev_result=(-p ${_superhist_proc_res})
-	fi
-
-	_superhist_proc_res=$(${ZSH_ROOT}/superhist/bin/superhist \
-	    --root ${SUPERHIST_ROOT} proc-pick -w "$(realpath $PWD)" ${prev_result[@]})
-    }
-
-    function fzf-super-history-pick-proc-exec() {
-	fzf-super-history-pick-proc
-	fzf-super-history-handle-result
-	zle reset-prompt
-    }
-
     autoload -U add-zsh-hook
     add-zsh-hook zshaddhistory _superhist-addhistory
     add-zsh-hook precmd _superhist-precmd
@@ -501,13 +416,6 @@ fzf-super-history-widget() {
 
 zle     -N   fzf-super-history-widget
 bindkey '^R' fzf-super-history-widget
-
-if [[ $_superhist == true ]] ; then
-    zle     -N   fzf-super-history-set-proc
-    bindkey '^N^[[2~' fzf-super-history-set-proc
-    zle     -N   fzf-super-history-pick-proc-exec
-    bindkey '^N\\' fzf-super-history-pick-proc-exec
-fi
 
 up-line-or-local-history() {
     zle set-local-history 1
