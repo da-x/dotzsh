@@ -435,6 +435,12 @@ bindkey "^[[B" down-line-or-local-history
 bindkey "^[[1;5A" up-line-or-history
 bindkey "^[[1;5B" down-line-or-history
 
+# Like 'cd' but with realpath resolution
+cdr() {
+    cd $(realpath "$@")
+}
+zle -N cdr
+
 # Command line editing shortcuts for Git
 
 emit-current-git-hash() {
