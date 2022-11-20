@@ -15,15 +15,23 @@ if [[ -e ${HOME}/.local/share/knots/shell/knots.zsh ]] ; then
 
     bindkey "^[[1;5H" knot-edit-default  # C-home
     bindkey "^[[1;5F" knot-pick-edit # C-end
-    bindkey "^[[3;5~" knot-edit-daily # C-del
     bindkey "^[[5;5~" knot-pick-url # C-pageup
     bindkey "^[[6;5~" knot-pick-chdir # C-pagedown
+
+    bindkey '^[OQ' knot-edit-daily # F2
+    bindkey '^[[1;5Q' knot-edit-daily-log # Ctrl-F2
+    bindkey '^[OR' knot-pick-edit # F3
     bindkey '^Nd' knot-edit-daily # C-n d
     bindkey '^N^D' knot-edit-daily # C-n C-d
+    bindkey "^N^[[1;5C" knot-edit-daily # C-n C-right
+    bindkey "^N^[[C" knot-edit-daily # C-n right
+
     bindkey '^Ng' knot-pick-chdir # C-n g
     bindkey '^N^G' knot-pick-chdir # C-n C-g
     bindkey '^Nu' knot-pick-url # C-n u
     bindkey '^N^u' knot-pick-url # C-n C-u
+    bindkey '^N/' knot-search # C-n /
+    bindkey '^N?' knot-search # C-n ?
 
     function knot-help() {
         (grep -E '^ *bindkey' \
@@ -772,8 +780,9 @@ function notify_unfocused_termination() {
     local logfile=${XDG_RUNTIME_DIR}/unfocused-terminations.log
     local name=$(tmux list-panes -as -F '#{window_name}' -f "#{==:#{pane_id},"${TMUX_PANE}"}")
     local index=$(tmux list-panes -as -F '#{window_index}' -f "#{==:#{pane_id},"${TMUX_PANE}"}")
-    echo "$(date +%s),${session_name},${index},${name},${TMUX_PANE},${exitcode}" >> ${logfile}.$$
+    echo "$(date +%s),${session_name},${index},${name},${TMUX_PANE},${exitcode},\"${TERMINATION_MSG:-}\"" >> ${logfile}.$$
     flock ${lockfile} bash -c "cat ${logfile}.$$ >> ${logfile}"
+    TERMINATION_MSG=""
     rm -f ${logfile}.$$
 }
 
@@ -953,6 +962,12 @@ dotfiles () {
 
 git-watch() {
     rex wait-on -g . -c -- "$@"
+}
+
+git-restore-tree-mtime() {
+    # https://stackoverflow.com/questions/2458042/restore-a-files-modification-time-in-git
+
+    git log --pretty=%at --name-status --reverse | perl -ane '($x,$f)=@F;next if !$x;$t=$x,next if !defined($f)||$s{$f};$s{$f}=utime($t,$t,$f),next if $x=~/[AM]/;'
 }
 
 # Docker shortcuts
