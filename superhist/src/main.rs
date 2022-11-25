@@ -1081,6 +1081,10 @@ fn sub_main() -> Result<(), Error> {
 }
 
 fn main() {
+    unsafe {
+        libc::signal(libc::SIGPIPE, libc::SIG_DFL);
+    }
+
     match sub_main() {
         Ok(()) => {
             return;
