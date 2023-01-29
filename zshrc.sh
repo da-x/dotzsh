@@ -780,7 +780,10 @@ function notify_unfocused_termination() {
     local logfile=${XDG_RUNTIME_DIR}/unfocused-terminations.log
     local name=$(tmux list-panes -as -F '#{window_name}' -f "#{==:#{pane_id},"${TMUX_PANE}"}")
     local index=$(tmux list-panes -as -F '#{window_index}' -f "#{==:#{pane_id},"${TMUX_PANE}"}")
-    echo "$(date +%s),${session_name},${index},${name},${TMUX_PANE},${exitcode},\"${TERMINATION_MSG:-}\"" >> ${logfile}.$$
+    local socket=$(echo ${TMUX} | awk -F, '{print $1}')
+    cat > ${logfile}.$$ << EOF
+{ "timestamp": $(date +%s), "socket": "${socket}", "session": "${session_name}", "window_idx": ${index}, "window_name": "${name}", "pane": "${TMUX_PANE}", "exit_code": ${exitcode}, "termination_msg": "${TERMINATION_MSG}" }
+EOF
     flock ${lockfile} bash -c "cat ${logfile}.$$ >> ${logfile}"
     TERMINATION_MSG=""
     rm -f ${logfile}.$$
