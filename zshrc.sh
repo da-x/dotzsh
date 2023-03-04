@@ -358,23 +358,29 @@ if [[ -e ${ZSH_ROOT}/superhist/bin/superhist ]] ; then
 
     function _fc_per_directory_history() {
 	local SUPERHIST_ROOT=$(_superhist_root)
-	${ZSH_ROOT}/superhist/bin/superhist --root ${SUPERHIST_ROOT} fc -s 1 -w $(realpath $PWD)
+	local start_time="${1}"
+	${ZSH_ROOT}/superhist/bin/superhist --root ${SUPERHIST_ROOT} fc -s 1 -w $(realpath $PWD) -t ${start_time}
     }
 
     function _fc_history() {
 	local SUPERHIST_ROOT=$(_superhist_root)
-	${ZSH_ROOT}/superhist/bin/superhist --root ${SUPERHIST_ROOT} fc -s 1
+	local start_time="${1}"
+	${ZSH_ROOT}/superhist/bin/superhist --root ${SUPERHIST_ROOT} fc -s 1 -t ${start_time}
     }
 
     function _fc_per_directory_history_fetch() {
 	local SUPERHIST_ROOT=$(_superhist_root)
-	BUFFER=$(${ZSH_ROOT}/superhist/bin/superhist --root ${SUPERHIST_ROOT}  fc -s 1 -w $(realpath $PWD) -f $1)
+	local item="${1}"
+	local start_time="${2}"
+	BUFFER=$(${ZSH_ROOT}/superhist/bin/superhist --root ${SUPERHIST_ROOT}  fc -s 1 -w $(realpath $PWD) -f ${item} -t ${start_time})
 	zle end-of-buffer-or-history
     }
 
     function _fc_history_fetch() {
 	local SUPERHIST_ROOT=$(_superhist_root)
-	BUFFER=$(${ZSH_ROOT}/superhist/bin/superhist --root ${SUPERHIST_ROOT}  fc -s 1 -f $1)
+	local item="${1}"
+	local start_time="${2}"
+	BUFFER=$(${ZSH_ROOT}/superhist/bin/superhist --root ${SUPERHIST_ROOT}  fc -s 1 -f ${item} -t ${start_time})
 	zle end-of-buffer-or-history
     }
 
@@ -387,13 +393,14 @@ fi
 fzf-per-directory-history-widget() {
   local selected num
   setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
-  selected=( $(_fc_per_directory_history |
+  local start_time=$(date +%s)
+  selected=( $(_fc_per_directory_history ${start_time} |
     FZF_DEFAULT_OPTS="--ansi --height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS -n2..,.. --tiebreak=index --bind=ctrl-r:toggle-sort $FZF_CTRL_R_OPTS --query=${(qqq)LBUFFER} +m" $(__fzfcmd)) )
   local ret=$?
   if [ -n "$selected" ]; then
     num=$selected[1]
     if [ -n "$num" ]; then
-      _fc_per_directory_history_fetch $num
+      _fc_per_directory_history_fetch $num ${start_time}
     fi
   fi
   zle reset-prompt
@@ -409,13 +416,14 @@ bindkey '^N^H' fzf-per-directory-history-widget
 fzf-super-history-widget() {
     local selected num
     setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
-    selected=( $(_fc_history |
+    local start_time=$(date +%s)
+    selected=( $(_fc_history ${start_time} |
       FZF_DEFAULT_OPTS="--ansi --height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS -n2..,.. --tiebreak=index --bind=ctrl-r:toggle-sort $FZF_CTRL_R_OPTS --query=${(qqq)LBUFFER} +m" $(__fzfcmd)) )
     local ret=$?
     if [ -n "$selected" ]; then
       num=$selected[1]
       if [ -n "$num" ]; then
-        _fc_history_fetch $num
+        _fc_history_fetch $num ${start_time}
       fi
     fi
     zle reset-prompt

@@ -1,6 +1,7 @@
 use structopt::StructOpt;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::{collections::hash_map, path::PathBuf};
-use std::io::Write;
+use std::io::{Write};
 use std::fs::{OpenOptions, File};
 use std::io::{BufReader, BufRead};
 use std::io::BufWriter;
@@ -18,14 +19,21 @@ use unicode_width::UnicodeWidthChar;
 
 #[derive(Error, Debug)]
 enum Error {
-    #[error("I/O error; {0}")]
+    #[error("I/O error: {0}")]
     IoError(#[from] std::io::Error),
-    #[error("env var error; {0}")]
+
+    #[error("env var error: {0}")]
     VarError(#[from] std::env::VarError),
-    #[error("json error; {0}")]
-    CsvError(#[from] serde_json::Error),
-    #[error("CrossTerm error; {0}")]
+
+    #[error("json error: {0}")]
+    JSONError(#[from] serde_json::Error),
+
+    #[error("CrossTerm error: {0}")]
     CrossTermError(#[from] crossterm::ErrorKind),
+
+    #[error("YAML error: {0}")]
+    YamlError(#[from] serde_yaml::Error),
+
     #[error("invalid parameters")]
     InvalidParams,
 }
@@ -114,6 +122,9 @@ enum Command {
 
         #[structopt(short = "f")]
         fetch: Option<u64>,
+
+        #[structopt(short = "t")]
+        start_time: u64,
     },
     Add {
         #[structopt(short = "x")]
@@ -875,12 +886,18 @@ impl SuperHist {
     }
 
     /// Somewhat behave like the 'fc' command for the full database
-    fn fc(&self, workdir: &Option<String>, mut nr: u64, fetch: Option<u64>) -> Result<(), Error> {
+    fn fc(&self, workdir: &Option<String>, mut nr: u64, fetch: Option<u64>, start_time: u64) -> Result<(), Error> {
         let full_timestamp = std::env::var("SUPERHIST_FC__FULL_TIMESTAMP").is_ok();
 
         let mut exits = std::collections::HashMap::new();
         type ExitMap = HashMap<(String, u64), (u32, UnixTime)>;
-        let filter_func = |exits: &mut ExitMap, event: &Event| -> bool {
+        let filter_func = |exits: &mut ExitMap, event: &Event, start_time: &Option<u64>| -> bool {
+            if let Some(start_time) = start_time {
+                if event.timestamp >= *start_time {
+                    return false;
+                }
+            }
+
             match &event.payload {
                 Payload::Command { workdir: command_workdir, .. } => {
                     if let Some(workdir) = workdir {
@@ -901,13 +918,17 @@ impl SuperHist {
 
         let mut buffer = std::io::BufWriter::with_capacity(0x10000, std::io::stdout());
         let mut hashset = std::collections::HashSet::new();
+        let stop = AtomicBool::new(false);
 
-        let mut print_func = |exits: &ExitMap, event: Event| -> Result<(), Error> {
+        let mut print_func = |exits: &ExitMap, event: Event, nr: &mut u64| -> Result<(), Error> {
             if let Payload::Command { text, .. } = event.payload {
                 let key = (event.terminal.clone(), event.idx);
                 if !hashset.contains(&text) {
                     let (print_nr, matching) = if let Some(fetch_nr) = fetch {
-                        (false, fetch_nr == nr)
+                        if fetch_nr == *nr {
+                            stop.store(true, Ordering::SeqCst);
+                        }
+                        (false, fetch_nr == *nr)
                     } else {
                         (true, true)
                     };
@@ -950,8 +971,8 @@ impl SuperHist {
                         buffer.write("\n".as_bytes())?;
                     }
                     hashset.insert(text);
-                    nr += 1;
                 }
+                *nr += 1;
             }
             Ok(())
         };
@@ -968,8 +989,11 @@ impl SuperHist {
 
             for line in vx.iter().rev() {
                 let event : Event = serde_json::de::from_str(line)?;
-                if filter_func(&mut exits, &event) {
-                    print_func(&exits, event)?;
+                if filter_func(&mut exits, &event, &Some(start_time)) {
+                    print_func(&exits, event, &mut nr)?;
+                }
+                if stop.load(Ordering::SeqCst) {
+                    break;
                 }
             }
 
@@ -985,26 +1009,79 @@ impl SuperHist {
             }
             v.sort();
 
-            for path in v.iter().rev() {
+            'next: for path in v.iter().rev() {
                 let s = path.to_string_lossy();
+                if s.ends_with(".idx.yaml") {
+                    continue;
+                }
+
+                let idx_path = PathBuf::from(format!("{}{}", path.display(), ".idx.yaml"));
                 if s.ends_with(".xz") {
+                    if workdir.is_none() && fetch.is_some() {
+                        #[derive(Serialize, Deserialize)]
+                        struct YamlCache {
+                            count: u64,
+                        }
+
+                        let cache = if !idx_path.exists() {
+                            let mut count = 0u64;
+                            let reader = BufReader::new(File::open(&path)?);
+                            let decompressor = BufReader::new(XzDecoder::new(reader));
+
+                            for line in decompressor.lines() {
+                                let event : Event = serde_json::de::from_str(line?.as_str())?;
+                                if filter_func(&mut exits, &event, &None) {
+                                    count += 1;
+                                }
+                            }
+
+                            let file = OpenOptions::new().write(true).create(true).truncate(true).open(idx_path)?;
+                            let mut file = BufWriter::new(file);
+                            let val = YamlCache {
+                                count,
+                            };
+                            writeln!(&mut file, "{}", serde_yaml::to_string(&val)?)?;
+                            val
+                        } else {
+                            serde_yaml::from_reader(&File::open(idx_path)?)?
+                        };
+
+                        if let Some(fetch_nr) = fetch {
+                            if nr + cache.count < fetch_nr {
+                                // Skip this whole archived history file because it will not match
+                                // the index we are seeking.
+                                nr += cache.count;
+                                continue 'next;
+                            }
+                        }
+                    }
+
                     let reader = BufReader::new(File::open(path)?);
                     let decompressor = BufReader::new(XzDecoder::new(reader));
 
                     for line in decompressor.lines() {
                         let event : Event = serde_json::de::from_str(line?.as_str())?;
-                        if filter_func(&mut exits, &event) {
-                            print_func(&exits, event)?;
+                        if filter_func(&mut exits, &event, &Some(start_time)) {
+                            print_func(&exits, event, &mut nr)?;
+                        }
+                        if stop.load(Ordering::SeqCst) {
+                            break;
                         }
                     }
                 } else {
                     let reader = BufReader::new(File::open(path)?);
                     for line in reader.lines() {
                         let event : Event = serde_json::de::from_str(line?.as_str())?;
-                        if filter_func(&mut exits, &event) {
-                            print_func(&exits, event)?;
+                        if filter_func(&mut exits, &event, &Some(start_time)) {
+                            print_func(&exits, event, &mut nr)?;
+                        }
+                        if stop.load(Ordering::SeqCst) {
+                            break;
                         }
                     }
+                }
+                if stop.load(Ordering::SeqCst) {
+                    break;
                 }
             }
         }
@@ -1026,8 +1103,8 @@ fn sub_main() -> Result<(), Error> {
         Command::Import { hist_file } => {
             superhist.import(&hist_file)?;
         },
-        Command::FC { workdir, start_nr, fetch } => {
-            superhist.fc(&workdir, start_nr, fetch)?;
+        Command::FC { workdir, start_nr, fetch, start_time } => {
+            superhist.fc(&workdir, start_nr, fetch, start_time)?;
         },
         Command::Add { timestamp, idx, terminal, command, workdir, exit_code, start } => {
             let event = Event {
