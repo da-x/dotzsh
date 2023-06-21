@@ -501,25 +501,75 @@ emit-picked-git-branch-name() {
 }
 zle -N emit-picked-git-branch-name
 
+current-git-dir() {
+    if [[ "$(unset GIT_DIR GIT_COMMON_DIR; git rev-parse --is-inside-work-tree 2>/dev/null)" == "true" ]] ;then
+	return 0
+    fi
+
+    return -1
+}
+
 my-zsh-git-checkout() {
-    local name=$(git-mru-branch | fzf --tac -e +s)
+    if ! current-git-dir ; then
+	>&2 echo "\nzshrc: ${PWD} not a Git work-tree"
+	zle reset-prompt
+	return
+    fi
+
+    local name=$(
+	git-mru-branch -f -v \
+	    | fzf --with-nth=2.. --prompt="$1" --ansi --tac -e +s \
+	    --header "[C-n] New branch" \
+	    --bind 'ctrl-n:become(bash -c "echo --new-branch--")' \
+            | awk -F" " '{print $1}')
+
     if [[ ${name} == "" ]] ; then
 	return
     fi
-    echo
-    git-wtb-switch ${name}
-    zle accept-line
+
+    local base=""
+    if [[ "$name" == "--new-branch--" ]] ; then
+	my-zsh-git-checkout-refs() {
+	    git show-ref | awk -F' ' '{print $2}' | grep -E '^refs/remotes/' | cut -c14-
+	}
+
+	base=$(my-zsh-git-checkout-refs | fzf --prompt="Base branch: " --ansi --tac -e +s)
+	if [[ ${base} == "" ]] ; then
+	    return
+	fi
+
+	echo
+	name=$(gum input --prompt="New branch: " --placeholder="" --value="$(basename ${base})")
+	if [[ ${name} == "" ]] ; then
+	    return
+	fi
+    fi
+
+    if [[ "${base}" == "" ]] ; then
+	echo
+	shift
+	git-wtb-switch "$@" ${name}
+	echo
+    else
+	base=$(echo ${base})
+	name=$(echo ${name})
+	echo
+	echo
+	git-wtb-switch -c ${name} --base ${base}
+	echo
+    fi
+
+    fzf-redraw-prompt
 }
 zle -N my-zsh-git-checkout
 
+my-zsh-git-worktree-switch() {
+    my-zsh-git-checkout "Switch to: "
+}
+zle -N my-zsh-git-worktree-switch
+
 my-zsh-git-worktree-checkout() {
-    local name=$(git-mru-branch | fzf --tac -e +s)
-    if [[ ${name} == "" ]] ; then
-	return
-    fi
-    echo
-    git-wtb-switch -c ${name}
-    zle accept-line
+    my-zsh-git-checkout "Checkout to: " -c
 }
 zle -N my-zsh-git-worktree-checkout
 
@@ -674,7 +724,7 @@ bindkey "^GH" emit-current-git-hash
 bindkey "^GP" emit-picked-git-branch-name
 bindkey "^GR" emit-current-git-root-relative
 bindkey "^GT" emit-current-git-path-to-root
-bindkey "^Gc" my-zsh-git-checkout
+bindkey "^Gc" my-zsh-git-worktree-switch
 bindkey "^GC" my-zsh-git-worktree-checkout
 bindkey "^Gd" my-zsh-CtrlG_d
 bindkey "^G^d" my-zsh-CtrlG_d
@@ -992,9 +1042,16 @@ docker-fzf-rm() {
 # Git worktree+branches handy commands
 #------------------------------------------------------------------------------------------
 
-git-wtb-path() {
+git-wtb-path-configured() {
     WTB_PATH=$(git config wtb.path)
     if [[ "${WTB_PATH}" == "" ]] ; then
+	return 1
+    fi
+    return 0
+}
+
+git-wtb-path-configured-verbose() {
+    if ! git-wtb-path-configured; then
 	echo "Not configured."
 	echo
 	echo "Run: git config wtb.path [path]"
@@ -1021,7 +1078,7 @@ git-wtb-rename() {
 	return
     fi
 
-    git-wtb-path
+    git-wtb-path-configured-verbose
 
     if [[ "$?" != "0" ]] ; then
 	return
@@ -1132,11 +1189,26 @@ git-wtb-switch() {
     local maintree=""
     local mainbranch=""
     while read dir details ; do
-	local branch=$(echo ${details} | awk -F'[\\]\\[]' '{print $2}')
+	local branch=""
+
+	branch=$(echo ${details} | awk -F'[\\]\\[]' '{print $2}')
+	if [[ "${branch}" == "" ]] ; then
+	    if echo ${details} | grep -q "(detached HEAD)" > /dev/null; then
+		local orig_ref
+		if [[ -e ${dir}/.git ]] ; then
+		    orig_ref=$(cat $(cat ${dir}/.git)/rebase-merge/head-name)
+		    if [[ "${orig_ref}" =~ ^refs/heads/(.*)$ ]] ; then
+			branch=$match[1]
+		    fi
+		fi
+	    fi
+	fi
+
 	if [[ "$maintree" == "" ]]; then
 	    maintree=$dir
 	    mainbranch=$branch
 	fi
+
 	if [[ "${branch}" == "${name}" ]] ; then
 	    if [[ ! -d ${dir} ]] ; then
 		local wd=$(git rev-parse --git-common-dir)/worktrees
@@ -1172,7 +1244,8 @@ git-wtb-switch() {
     done < <(git worktree list)
 
     if [[ "$create" == "1" ]] ; then
-	git-wtb-path
+        git-wtb-path-configured-verbose
+
 	if [[ "$?" != "0" ]] ; then
 	    return 1
 	fi
