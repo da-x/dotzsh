@@ -180,7 +180,7 @@ vgg() { v -c "Gg $@" }
 
 if [ -n "$TMUX" ]; then
     get-bgc() {
-	v=$(tmux select-pane -g | grep 'bg=#' | awk -F'bg=#' '{print $2}')
+	echo $(tmux select-pane -g | grep 'bg=#' | awk -F'bg=#' '{print $2}')
     }
 
     bgc() {
