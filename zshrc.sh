@@ -43,7 +43,8 @@ if [[ -e ${HOME}/.local/share/knots/shell/knots.zsh ]] ; then
 
     bindkey '^N^[OP' knot-help  # Ctrl-N F1
 
-    alias cdn=knot-chdir-daily
+    alias cdd=knot-chdir-daily
+    alias cdn=knot-chdir-current
 fi
 
 unset DISABLE_AUTO_UPDATE
@@ -848,6 +849,9 @@ EOF
     rm -f ${logfile}.$$
 }
 
+prompt_mode_default_style="$bg[blue]$fg[black]"
+prompt_mode_separator_style="$bg[black]$fg[white]"
+
 set_prompt() {
     local LAST_EXIT_CODE=$?
     local dh=`print -n "%{\033[1;38;2;0;127;127m%}"`
@@ -1094,7 +1098,7 @@ git-wtb-rename() {
 		    break
 		fi
 
-		mkdir -p $(dirname ${newdirname})
+		mkdir --mode=0700 -p $(dirname ${newdirname})
 		git worktree move ${dir} ${newdirname}
 		git branch -M ${last} ${newname}
 		cd ${newdirname}
@@ -1218,7 +1222,7 @@ git-wtb-switch() {
 		    if [[ "$(cat ${i}/gitdir)" == "${dir}/.git" ]] ; then
 			echo Worktree missing, recovering
 			found=1
-			mkdir -p ${dir}
+			mkdir --mode=0700 -p ${dir}
 			echo "gitdir: $(realpath ${i})" > ${dir}/.git
 			cd ${dir}
 			git checkout -- .
@@ -1230,7 +1234,7 @@ git-wtb-switch() {
 		if [[ "${found}" == "0" ]] ; then
 		    echo Worktree missing, RECREATING
 		    git worktree remove ${dir}
-		    mkdir -p $(dirname ${dir})
+		    mkdir --mode=0700 -p $(dirname ${dir})
 		    git worktree add ${dir} ${branch}
 		fi
 	    fi
