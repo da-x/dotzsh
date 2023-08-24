@@ -26,12 +26,13 @@ if [[ -e ${HOME}/.local/share/knots/shell/knots.zsh ]] ; then
     bindkey "^N^[[1;5C" knot-edit-daily # C-n C-right
     bindkey "^N^[[C" knot-edit-daily # C-n right
 
-    bindkey '^Ng' knot-pick-chdir # C-n g
-    bindkey '^N^G' knot-pick-chdir # C-n C-g
+    bindkey '^_' knot-pick-chdir # C-/
+    bindkey '^N^d' knot-pick-chdir # C-n d
+    bindkey '^Nd' knot-pick-chdir # C-n C-d
     bindkey '^Nu' knot-pick-url # C-n u
     bindkey '^N^u' knot-pick-url # C-n C-u
-    bindkey '^N/' knot-search # C-n /
     bindkey '^N?' knot-search # C-n ?
+    bindkey '^N/' knot-search-files # C-n /
 
     function knot-help() {
         (grep -E '^ *bindkey' \
@@ -43,6 +44,8 @@ if [[ -e ${HOME}/.local/share/knots/shell/knots.zsh ]] ; then
 
     bindkey '^N^[OP' knot-help  # Ctrl-N F1
 
+    alias ke=knot-edit-current-knot
+    alias kwe=knot-edit-current-workdir-knot
     alias cdd=knot-chdir-daily
     alias cdn=knot-chdir-current
 fi
