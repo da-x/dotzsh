@@ -143,6 +143,7 @@ alias gwd='git-wtb-remove'
 alias gws='git-wtb-switch'
 alias gwr='git-wtb-rename'
 alias gwl='git worktree list'
+alias tpc='tmux capture-pane -epJ -t ${TMUX_PANE} -S -'
 
 alias v-gls='v $(git ls-files ; git list-untracked)'
 alias fm='exo-open --launch FileManager'
@@ -673,6 +674,39 @@ my-zsh-cd-parent() {
     zle fzf-redraw-prompt
 }
 zle -N my-zsh-cd-parent
+
+tpc-fzf-tmux-pane-editor-replace() {
+    if [[ "${1}" != "" ]] ; then
+	echo "$1"
+	if [[ "$1" =~ ^([^:]+):([0-9]+): ]]; then
+	    exec nvim "${match[1]}" +${match[2]}
+	fi
+    fi
+    echo "invalid params: $@"
+    sleep 4
+}
+
+tpc-fzf-open() {
+    tmux split-window -P -- "source ~/.zshrc; tpc-fzf-tmux-pane-editor-replace $1"
+}
+
+tpc-fzf-nvim-lookup() {
+    local result
+
+    tpz-fzf-query() {
+	tpc | cgrep '([^:]+):[0-9]+:' | awk '!seen[$0]++'
+    }
+
+    if [[ "$(tpz-fzf-query | wc -l)" == "0" ]] ; then
+	return
+    fi
+
+    tpz-fzf-query | fzf --ansi +s --tac --cycle \
+          --bind 'enter:execute-silent(source ~/.zshrc; tpc-fzf-open {1})' \
+}
+
+zle -N tpc-fzf-nvim-lookup
+bindkey "^[OS" tpc-fzf-nvim-lookup # F4
 
 bindkey "^[ll" my-zsh-ls
 bindkey "^[l^[l" my-zsh-ls
