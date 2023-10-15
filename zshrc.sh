@@ -142,6 +142,7 @@ alias gwh='git-wtb-help'
 alias gwd='git-wtb-remove'
 alias gws='git-wtb-switch'
 alias gwr='git-wtb-rename'
+alias gwf='git-wtb-fork'
 alias gwl='git worktree list'
 alias tpc='tmux capture-pane -epJ -t ${TMUX_PANE} -S -'
 
@@ -1106,6 +1107,7 @@ git-wtb-path-configured-verbose() {
 git-wtb-help() {
     echo "gws - git-wtb-switch [name] (-c/--create) --base base"
     echo "gwr - git-wtb-rename [new-name]"
+    echo "gwf - git-wtb-fork [new-name]"
     echo "gwd - git-wtb-remove [name] (-f)"
     echo "gwh - git-wtb-help"
     echo "gwl - git worktree list"
@@ -1143,6 +1145,27 @@ git-wtb-rename() {
 	    break
 	fi
     done < <(git worktree list)
+}
+
+git-wtb-fork() {
+    local name=""
+    local base=""
+
+    while [[ $# != 0 ]] ; do
+	if [[ "$name" != "" ]] ; then
+	    echo "Name already specified"
+	    return 1
+	fi
+	name="$1"
+	shift
+    done
+
+    if [[ ${name} == "" ]] ; then
+	echo "Name not specified"
+	return
+    fi
+
+    gws -c "${name}" -b HEAD
 }
 
 git-wtb-remove() {
