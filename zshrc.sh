@@ -55,7 +55,8 @@ unset DISABLE_AUTO_UPDATE
 # Timeout
 
 KEYTIMEOUT=200
-export PROMPT_MODE=
+export PROMPT_MODE=${EXTERNAL_PROMPT_MODE:-}
+unset EXTERNAL_PROMPT_MODE
 
 # Aliases
 
@@ -154,6 +155,8 @@ alias rgsl='rg --sort-files --color always'
 alias rex1='rex wait-on -n 1 -- '
 alias rex2='rex wait-on -n 2 -- '
 alias rex3='rex wait-on -n 3 -- '
+alias kwd='knots workdir ${KNOT_ABS_PATH}'
+alias ckw='cd $(knots workdir ${KNOT_ABS_PATH})'
 
 which lsd 2>/dev/null >/dev/null
 if [[ "$?" == "0" ]] ; then
@@ -1328,7 +1331,7 @@ git-wtb-switch() {
 		echo "No such local branch"
 		return 1
 	    else
-		git branch --track ${name} ${base}
+		git branch ${name} ${base}
 	    fi
 	fi
 
