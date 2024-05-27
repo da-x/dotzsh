@@ -698,7 +698,7 @@ tpc-fzf-nvim-lookup() {
     local result
 
     tpz-fzf-query() {
-	tpc | cgrep '([^:]+):[0-9]+:' | awk '!seen[$0]++'
+	tpc | cgrep '^([^ :]+):[0-9]+:' | awk '!seen[$0]++'
     }
 
     if [[ "$(tpz-fzf-query | wc -l)" == "0" ]] ; then
