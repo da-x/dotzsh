@@ -965,7 +965,7 @@ set_prompt() {
     # Path: http://stevelosh.com/blog/2010/02/my-extravagant-zsh-prompt/
 
     local dirpart=""
-    if [[ "$HAS_KNOTS" == "1" ]] ; then
+    if [[ "$HAS_KNOTS" == "0" ]] ; then
 	local knot=$(knots reverse-lookup --silent ${PWD})
     else
 	local knot=""
