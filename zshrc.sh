@@ -167,6 +167,8 @@ else
 	alias ll='exa -l'
     fi
 fi
+which knots 2>/dev/null >/dev/null
+HAS_KNOTS=$?
 
 # Editor
 
@@ -963,7 +965,11 @@ set_prompt() {
     # Path: http://stevelosh.com/blog/2010/02/my-extravagant-zsh-prompt/
 
     local dirpart=""
-    local knot=$(knots reverse-lookup --silent ${PWD})
+    if [[ "$HAS_KNOTS" == "1" ]] ; then
+	local knot=$(knots reverse-lookup --silent ${PWD})
+    else
+	local knot=""
+    fi
 
     if [[ "${knot}" == "" ]] ; then
 	local pwd="${PWD/#$HOME\//}"
