@@ -450,7 +450,11 @@ impl SuperHist {
             let mut file = std::fs::File::create(&path)?;
             file.write_all(b"")?;
         }
-        Ok(FileLock::lock(path.to_str().unwrap(), true, true)?)
+        let options = file_lock::FileOptions::new()
+            .write(true)
+            .create(true)
+            .append(true);
+        Ok(FileLock::lock(path.to_str().unwrap(), true, options)?)
     }
 
     /// Take current file, reverse its record and keep it xz-compressed under archive/
