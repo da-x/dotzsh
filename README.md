@@ -5,6 +5,8 @@ Command line editing:
 * `C-\` - FZF-pick a subdirectory to change to
 * `C-'` - FZF-pick a directory to change to, out of the current directories
           of other open terminals of the user.
+* `C-'` - Same as above but past the pathname into the command line
+* `C-n C-'` - Same as above but past the pathname into the command line
 * `C-]` - FZF-pick files from current tree and paste into commandline
 * `C-r` - FZF-pick commands from history and paste into commandline
 * `C-n h` - FZF-pick commands from history for the current directory and paste into commandline

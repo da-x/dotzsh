@@ -718,10 +718,15 @@ bindkey "^[ll" my-zsh-ls
 bindkey "^[l^[l" my-zsh-ls
 
 # C
-fzf-cd-tmux-paths() {
+get-tmux-paths() {
   local cmd="tmux-paths"
   setopt localoptions pipefail no_aliases 2> /dev/null
-  local dir="$(eval "$cmd" | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} --no-sort --reverse $FZF_DEFAULT_OPTS $FZF_ALT_C_OPTS" $(__fzfcmd) +m)"
+  echo -n "$(eval "$cmd" | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} --no-sort --reverse $FZF_DEFAULT_OPTS $FZF_ALT_C_OPTS" $(__fzfcmd) +m)"
+}
+
+fzf-cd-tmux-paths() {
+  local dir
+  dir=$(get-tmux-paths)
   if [[ -z "$dir" ]]; then
     zle redisplay
     return 0
@@ -734,8 +739,20 @@ fzf-cd-tmux-paths() {
 }
 zle     -N    fzf-cd-tmux-paths
 
+fzf-emit-tmux-paths() {
+  local s
+  s=$(get-tmux-paths)
+  BUFFER="${BUFFER[1,$(($CURSOR))]}$s${BUFFER[$(($CURSOR + 1)),100000]}"
+  CURSOR=$(($CURSOR + $#s))
+  unset s
+  zle fzf-redraw-prompt
+}
+zle     -N    fzf-emit-tmux-paths
+
+
 # Ctrl-'
 bindkey '^[[5;30024~' fzf-cd-tmux-paths
+bindkey '^N^[[5;30024~' fzf-emit-tmux-paths
 
 # C-\
 bindkey "^\\" fzf-cd-widget
