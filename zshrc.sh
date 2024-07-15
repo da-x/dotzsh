@@ -177,6 +177,9 @@ if [[ "$?" == "0" ]] ; then
     alias v='nvim'
     export EDITOR="nvim"
     VISUAL="nvim"
+    alias vim="nvim"
+    alias vi="nvim"
+    alias oldvim="/usr/bin/vim"
 else
     alias v='vim'
     export EDITOR="vim"
