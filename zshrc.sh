@@ -17,6 +17,7 @@ if [[ -e ${HOME}/.local/share/knots/shell/knots.zsh ]] ; then
     bindkey "^[[1;5F" knot-pick-edit # C-end
     bindkey "^[[5;5~" knot-pick-url # C-pageup
     bindkey "^[[6;5~" knot-pick-chdir # C-pagedown
+    bindkey "^N^[[1;5F" knot-edit-current-workdir-knot
 
     bindkey '^[OQ' knot-edit-daily # F2
     bindkey '^[[1;5Q' knot-edit-daily-log # Ctrl-F2
