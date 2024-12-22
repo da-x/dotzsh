@@ -187,6 +187,10 @@ else
     VISUAL="vim"
 fi
 
+rvim() {
+    NVIM_APPNAME=nvim-reset nvim "$@"
+}
+
 # Invoke vim Gg directly from command line
 
 vgg() { v -c "Gg $@" }
