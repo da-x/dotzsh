@@ -13,11 +13,10 @@ source ${ZSH_ROOT}/zsh-titles/titles.plugin.zsh
 if [[ -e ${HOME}/.local/share/knots/shell/knots.zsh ]] ; then
     source ${HOME}/.local/share/knots/shell/knots.zsh
 
-    bindkey "^[[1;5H" knot-edit-default  # C-home
+    bindkey "^[[1;5H" knot-edit-context # C-home
     bindkey "^[[1;5F" knot-pick-edit # C-end
     bindkey "^[[5;5~" knot-pick-url # C-pageup
     bindkey "^[[6;5~" knot-pick-chdir # C-pagedown
-    bindkey "^N^[[1;5F" knot-edit-current-workdir-knot
 
     bindkey '^[OQ' knot-edit-daily # F2
     bindkey '^[[1;5Q' knot-edit-daily-log # Ctrl-F2
@@ -76,10 +75,12 @@ alias h='cd ~'
 alias a='cat ${ZSH_ROOT}/zshrc.sh | grep ^alias | sort'
 
 alias ga='git add'
-alias gamd='git amd'
-alias gama='git ama'
-alias gamna='git amna'
-alias gamupd='git amupd'
+alias gam='git-commit-plus amend'
+alias gamd='git-commit-plus amend --reset-date'
+alias gamna='git-commit-plus amend --add --no-edit'
+alias gamnad='git-commit-plus amend --add --reset-date --no-edit'
+alias gtc='git-commit-plus tentative --add'
+alias gtcna='git-commit-plus tentative'
 alias gb='git branch -v'
 alias gbd='git branch -D'
 alias gbl='git fancy-branch-list'
