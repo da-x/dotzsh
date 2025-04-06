@@ -75,12 +75,20 @@ alias h='cd ~'
 alias a='cat ${ZSH_ROOT}/zshrc.sh | grep ^alias | sort'
 
 alias ga='git add'
-alias gam='git-commit-plus amend'
-alias gamd='git-commit-plus amend --reset-date'
-alias gamna='git-commit-plus amend --add --no-edit'
-alias gamnad='git-commit-plus amend --add --reset-date --no-edit'
-alias gtc='git-commit-plus tentative --add'
-alias gtcna='git-commit-plus tentative'
+alias gcm='git chain reword'
+alias gcn='git chain new'
+alias gcan='git chain -a new'
+alias gcl='git chain link'
+alias gcal='git chain -a link'
+alias gcl='git chain link'
+alias gcs='git chain squash'
+alias gcf='git chain finish'
+# alias gam='git-commit-plus amend'
+# alias gamd='git-commit-plus amend --reset-date'
+# alias gamna='git-commit-plus amend --add --no-edit'
+# alias gamnad='git-commit-plus amend --add --reset-date --no-edit'
+# alias gtc='git-commit-plus tentative --add'
+# alias gtcna='git-commit-plus tentative'
 alias gb='git branch -v'
 alias gbd='git branch -D'
 alias gbl='git fancy-branch-list'
@@ -90,14 +98,14 @@ alias gbr='git branch -v -r'
 alias gbu='git branch -u'
 alias gbuo='git buo'
 alias gbuom='git buom'
-alias gc='git commit'
-alias gca='git commit -a'
-alias gcam='git commit -a -m'
-alias gcam_='git cam "Various updates (no details)"'
-alias gcam_p='gcam_ && gp'
+# alias gc='git commit'
+# alias gca='git commit -a'
+# alias gcam='git commit -a -m'
+# alias gcam_='git cam "Various updates (no details)"'
+# alias gcam_p='gcam_ && gp'
 alias gchr='git crpk'
-alias gcm='git cm'
-alias gcm_='git cm "Various updates (no details)"'
+# alias gcm='git cm'
+# alias gcm_='git cm "Various updates (no details)"'
 alias gco='git co'
 alias gcont='git cont'
 alias gcp1='git chop1'
@@ -539,7 +547,7 @@ my-zsh-git-checkout() {
     local name=$(
 	git-mru-branch -f -v \
 	    | fzf --with-nth=2.. --prompt="$1" --ansi --tac -e +s \
-	    --header "[C-n] New branch" \
+	    --header "[C-n] Checkout remote branch" \
 	    --bind 'ctrl-n:become(bash -c "echo --new-branch--")' \
             | awk -F" " '{print $1}')
 
@@ -1127,6 +1135,10 @@ git-wtb-path-configured() {
     return 0
 }
 
+git-wtb-parked-branch-configured() {
+    git config wtb.parked-branch || true
+}
+
 git-wtb-path-configured-verbose() {
     if ! git-wtb-path-configured; then
 	echo "Not configured."
@@ -1341,6 +1353,10 @@ git-wtb-switch() {
 	    return
 	fi
     done < <(git worktree list)
+
+    if [[ "${mainbranch}" == "$(git-wtb-parked-branch-configured)" ]] ; then
+        create=1
+    fi
 
     if [[ "$create" == "1" ]] ; then
         git-wtb-path-configured-verbose
