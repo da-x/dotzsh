@@ -180,6 +180,11 @@ fi
 which knots 2>/dev/null >/dev/null
 HAS_KNOTS=$?
 
+if [[ "$HAS_KNOTS" == "0" ]] && [[ "$KNOT_ABS_PATH" != "" ]]  ; then
+    export KNOT_HOME=$(kwd)
+fi
+
+
 # Editor
 
 which nvim 2>/dev/null >/dev/null
