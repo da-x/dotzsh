@@ -189,21 +189,22 @@ fi
 
 which nvim 2>/dev/null >/dev/null
 if [[ "$?" == "0" ]] ; then
+    actualvim=nvim
     alias v='nvim'
-    export EDITOR="nvim"
-    VISUAL="nvim"
-    alias vim="nvim"
-    alias vi="nvim"
+    if [[ -x ~/.local/bin/xvim ]] ; then
+	actualvim=xvim
+	alias v='xvim'
+    fi
+    export EDITOR="${actualvim}"
+    VISUAL="${actualvim}"
+    alias vim="xvim"
+    alias vi="xvim"
     alias oldvim="/usr/bin/vim"
 else
     alias v='vim'
     export EDITOR="vim"
     VISUAL="vim"
 fi
-
-rvim() {
-    NVIM_APPNAME=nvim-reset nvim "$@"
-}
 
 # Invoke vim Gg directly from command line
 
