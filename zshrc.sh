@@ -187,23 +187,8 @@ fi
 
 # Editor
 
-which nvim 2>/dev/null >/dev/null
-if [[ "$?" == "0" ]] ; then
-    actualvim=nvim
-    alias v='nvim'
-    if [[ -x ~/.local/bin/xvim ]] ; then
-	actualvim=xvim
-	alias v='xvim'
-    fi
-    export EDITOR="${actualvim}"
-    VISUAL="${actualvim}"
-    alias vim="xvim"
-    alias vi="xvim"
-    alias oldvim="/usr/bin/vim"
-else
-    alias v='vim'
-    export EDITOR="vim"
-    VISUAL="vim"
+if [[ -x ~/.files/editor.sh ]]; then
+    source ~/.files/editor.sh
 fi
 
 # Invoke vim Gg directly from command line
@@ -613,7 +598,7 @@ my-zsh-git-log() {
 zle -N my-zsh-git-log
 
 my-zsh-CtrlG_j() {
-    nvim -c "call MyFZFDiffHunks('HEAD~1', 'full')"
+    xvim -c "call MyFZFDiffHunks('HEAD~1', 'full')"
 }
 zle -N my-zsh-CtrlG_j
 
@@ -623,12 +608,12 @@ my-zsh-CtrlG_d() {
 zle -N my-zsh-CtrlG_d
 
 my-zsh-CtrlG_D() {
-    nvim -c "call MyFZFDiffHunks('HEAD', 'full')"
+    xvim -c "call MyFZFDiffHunks('HEAD', 'full')"
 }
 zle -N my-zsh-CtrlG_D
 
 my-zsh-DiffHunksCached() {
-    nvim -c "call MyFZFDiffHunks('--cached', 'full')"
+    xvim -c "call MyFZFDiffHunks('--cached', 'full')"
 }
 zle -N my-zsh-DiffHunksCached
 
@@ -708,7 +693,7 @@ tpc-fzf-tmux-pane-editor-replace() {
     if [[ "${1}" != "" ]] ; then
 	echo "$1"
 	if [[ "$1" =~ ^([^:]+):([0-9]+): ]]; then
-	    exec nvim "${match[1]}" +${match[2]}
+	    exec xvim "${match[1]}" +${match[2]}
 	fi
     fi
     echo "invalid params: $@"
