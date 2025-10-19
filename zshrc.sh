@@ -182,6 +182,7 @@ HAS_KNOTS=$?
 
 if [[ "$HAS_KNOTS" == "0" ]] && [[ "$KNOT_ABS_PATH" != "" ]]  ; then
     export KNOT_HOME=$(kwd)
+    export PATH=${KNOT_HOME}/.bin:$PATH
 fi
 
 
