@@ -257,12 +257,10 @@ stty -ixon
 stty stop undef
 stty start undef
 
-bindkey "^[[5;30001~" accept-line
-bindkey "^[[5;30002~" accept-line
-bindkey "^[[5;30003~" accept-line
-bindkey "^[[5;30005~" accept-line
+bindkey "^[[27;2;13~" accept-line
+bindkey "^[[27;5;13~" accept-line
+bindkey "^[[27;6;13~" accept-line
 
-bindkey "^[[5;30014~" my-noop-func
 bindkey "^[[1;3A" my-noop-func
 bindkey "^[[1;3B" my-noop-func
 bindkey "^[[1;3C" my-noop-func
@@ -760,8 +758,8 @@ zle     -N    fzf-emit-tmux-paths
 
 
 # Ctrl-'
-bindkey '^[[5;30024~' fzf-cd-tmux-paths
-bindkey '^N^[[5;30024~' fzf-emit-tmux-paths
+bindkey "^[\'" fzf-cd-tmux-paths
+bindkey "^N^[\'" fzf-emit-tmux-paths
 
 # C-\
 bindkey "^\\" fzf-cd-widget
