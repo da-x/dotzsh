@@ -65,6 +65,8 @@ alias -s h=vim
 alias -s toml=vim
 alias -s md=vim
 
+alias aic='aichat-commit'
+alias aica='aichat-commit all'
 alias mv='mv -v'
 alias cdl='cd ~/var/downloads'
 alias clr='clear'
