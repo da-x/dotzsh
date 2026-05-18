@@ -1300,7 +1300,7 @@ git-wtb-switch() {
 	    if echo ${details} | grep -q "(detached HEAD)" > /dev/null; then
 		local orig_ref
 		if [[ -e ${dir}/.git ]] ; then
-		    orig_ref=$(cat $(cat ${dir}/.git)/rebase-merge/head-name)
+		    orig_ref=$(cat $(cat ${dir}/.git | sed -E 's/^gitdir: //g')/rebase-merge/head-name)
 		    if [[ "${orig_ref}" =~ ^refs/heads/(.*)$ ]] ; then
 			branch=$match[1]
 		    fi
